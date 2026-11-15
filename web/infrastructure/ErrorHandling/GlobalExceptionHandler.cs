@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
+using web.Services.Mail;
 using web.Services.Push;
 
 namespace web.Infrastructure.ErrorHandling;
@@ -11,6 +12,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         {
             // Én linje pr. service med egen exception.
             PushException ex => (int)ex.StatusCode,
+            MailException ex => (int)ex.StatusCode,
             _ => StatusCodes.Status500InternalServerError
         };
 

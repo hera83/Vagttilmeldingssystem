@@ -11,7 +11,10 @@
 | `GetByUserIdAsync(Guid userId)` | Profilen, eller `null`, hvis brugeren ikke har udfyldt den endnu. |
 | `IsCompleteAsync(Guid userId)` | `true`, hvis profilen findes og alle påkrævede felter er udfyldt. Bruges til at spærre tilmelding. |
 | `GetCompleteUserIdsAsync()` | Id'er på alle brugere med komplet profil (til lister). |
-| `SaveAsync(Guid userId, SaveProfileDto dto)` | Opretter eller opdaterer brugerens profil og returnerer den. |
+| `SaveAsync(Guid userId, SaveProfileDto dto)` | Opretter eller opdaterer brugerens profil og returnerer den. Rører ikke `EmailNotifications`. |
+| `SetEmailNotificationsAsync(Guid userId, bool enabled)` | Slår e-mail-beskeder (frigivelser, bekræftelser, påmindelser) til/fra. Opretter en tom profil, hvis der ingen er. |
+| `GetEmailNotificationsAsync(Guid userId)` | Er e-mail-beskeder slået til? `true` uden profil (standard). |
+| `GetEmailOptOutUserIdsAsync()` | Brugere, der har slået e-mail-beskeder fra. |
 
 ## Faldgruber
 - "Komplet" afgøres ét sted: `ProfileMapper.IsCompleteExpression` (og samme betingelse i `ToDtoExpression`). Ret begge, hvis felterne ændres.

@@ -42,4 +42,29 @@ public class ProfileRepository(WebDbContext dbContext) : IProfileRepository
         await dbContext.SaveChangesAsync(cancellationToken);
         return entity.ToDto();
     }
+
+    public async Task SetEmailNotificationsAsync(Guid userId, bool enabled, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Profiles.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+        if (entity is null)
+        {
+            entity = new Data.Models.Profile { UserId = userId };
+            dbContext.Profiles.Add(entity);
+        }
+
+        entity.EmailNotifications = enabled;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> GetEmailNotificationsAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        await dbContext.Profiles.AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Select(x => (bool?)x.EmailNotifications)
+            .FirstOrDefaultAsync(cancellationToken) ?? true;
+
+    public async Task<HashSet<Guid>> GetEmailOptOutUserIdsAsync(CancellationToken cancellationToken = default) =>
+        (await dbContext.Profiles.AsNoTracking()
+            .Where(x => !x.EmailNotifications)
+            .Select(x => x.UserId)
+            .ToListAsync(cancellationToken)).ToHashSet();
 }

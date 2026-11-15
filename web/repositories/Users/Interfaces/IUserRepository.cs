@@ -10,6 +10,9 @@ public interface IUserRepository
 
     Task<UserDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>Slår brugeren op på brugernavnet (e-mailen) uden forskel på store og små bogstaver, eller null.</summary>
+    Task<UserDto?> GetByUserNameAsync(string userName, CancellationToken cancellationToken = default);
+
     Task<UserDto?> ValidateCredentialsAsync(string userName, string password, CancellationToken cancellationToken = default);
 
     Task<UserDto?> CreateAsync(CreateUserDto dto, CancellationToken cancellationToken = default);

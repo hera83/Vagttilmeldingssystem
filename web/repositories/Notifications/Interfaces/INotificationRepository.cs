@@ -17,5 +17,8 @@ public interface INotificationRepository
     Task<bool> MarkSkippedAsync(Guid id, string reason, CancellationToken cancellationToken = default);
 
     /// <summary>Tæller et fejlet forsøg. Med nextAttemptAtUtc prøves igen da, ellers opgives beskeden (Failed).</summary>
+    /// <summary>Tømmer tekst og link (fx efter afsendelse af en mail med et engangslink), så de ikke ligger i databasen.</summary>
+    Task<bool> ClearContentAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<bool> MarkAttemptFailedAsync(Guid id, string error, DateTime? nextAttemptAtUtc, CancellationToken cancellationToken = default);
 }

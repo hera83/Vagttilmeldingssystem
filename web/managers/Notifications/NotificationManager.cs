@@ -5,8 +5,13 @@ using web.Managers.Notifications.Interfaces;
 using web.Repositories.Notifications.Dtos;
 using web.Repositories.Notifications.Interfaces;
 using web.Repositories.PushSubscriptions.Dtos;
+using web.Repositories.Profiles.Interfaces;
 using web.Repositories.PushSubscriptions.Interfaces;
 using web.Repositories.Shifts.Interfaces;
+using web.Repositories.Users.Interfaces;
+using web.Services.Mail;
+using web.Services.Mail.Dtos.Messages;
+using web.Services.Mail.Interfaces;
 using web.Services.Push;
 using web.Services.Push.Dtos.Messages;
 using web.Services.Push.Interfaces;
@@ -14,7 +19,7 @@ using web.Services.Push.Interfaces;
 namespace web.Managers.Notifications;
 
 /// <summary>
-/// Køen af udgående beskeder: hvad der lægges i køen (frigivelser, testbeskeder), og hvordan den sendes (push nu, e-mail i step 11).
+/// Køen af udgående beskeder: hvad der lægges i køen (frigivelser, testbeskeder), og hvordan den sendes (push og e-mail).
 /// Kaldes af NotificationWorker og PushController.
 /// </summary>
 public class NotificationManager(
@@ -22,14 +27,16 @@ public class NotificationManager(
     INotificationRepository notificationRepository,
     IPushSubscriptionRepository pushSubscriptionRepository,
     IPushService pushService,
+    IUserRepository userRepository,
+    IProfileRepository profileRepository,
+    IMailService mailService,
+    AppLinks appLinks,
     NotificationSignal signal,
     TimeProvider timeProvider,
     ILogger<NotificationManager> logger) : INotificationManager
 {
     public const int BatchSize = 100;
     public const int MaxAttempts = 3;
-    public const string KindShiftsOpened = "ShiftsOpened";
-    public const string KindTest = "Test";
 
     /// <summary>Ventetid før forsøg nr. 2 og 3.</summary>
     private static readonly TimeSpan[] RetryDelays = [TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(5)];
@@ -87,7 +94,7 @@ public class NotificationManager(
             {
                 UserId = userId,
                 Channel = NotificationChannel.Push,
-                Kind = KindTest,
+                Kind = NotificationKinds.Test,
                 Title = "Testbesked fra Vagttilmelding",
                 Body = "Push-beskeder virker på dine enheder.",
                 Url = "/Profile",
@@ -110,6 +117,7 @@ public class NotificationManager(
 
         var pushEnabled = await pushService.GetPublicKeyAsync(cancellationToken) is not null;
         var recipients = pushEnabled ? await pushSubscriptionRepository.GetActiveSubscriberIdsAsync(cancellationToken) : [];
+        var emailRecipients = await GetEmailRecipientsAsync(cancellationToken);
         var queued = 0;
 
         foreach (var batch in batches)
@@ -125,11 +133,27 @@ public class NotificationManager(
                 {
                     UserId = userId,
                     Channel = NotificationChannel.Push,
-                    Kind = KindShiftsOpened,
+                    Kind = NotificationKinds.ShiftsOpened,
                     Title = title,
                     Body = body,
                     Url = url,
                     DedupKey = $"opened:{batch.EventId:N}:{batch.OpenedAt.Ticks}:push:{userId:N}",
+                    NotBeforeUtc = now
+                }).ToList(), cancellationToken);
+            }
+
+            if (current && emailRecipients.Count > 0)
+            {
+                var mail = MailTemplates.ShiftsOpened(batch.EventName, batch.AvailableCount, appLinks.TryAbsolute($"/Signup?eventId={batch.EventId}"));
+                queued += await notificationRepository.CreateManyAsync(emailRecipients.Select(userId => new CreateNotificationDto
+                {
+                    UserId = userId,
+                    Channel = NotificationChannel.Email,
+                    Kind = NotificationKinds.ShiftsOpened,
+                    Title = mail.Subject,
+                    Body = mail.Body,
+                    Url = appLinks.TryAbsolute($"/Signup?eventId={batch.EventId}") ?? string.Empty,
+                    DedupKey = $"opened:{batch.EventId:N}:{batch.OpenedAt.Ticks}:email:{userId:N}",
                     NotBeforeUtc = now
                 }).ToList(), cancellationToken);
             }
@@ -155,6 +179,9 @@ public class NotificationManager(
             {
                 case NotificationChannel.Push:
                     await SendPushAsync(notification, cancellationToken);
+                    break;
+                case NotificationChannel.Email:
+                    await SendEmailAsync(notification, cancellationToken);
                     break;
                 default:
                     await notificationRepository.MarkSkippedAsync(notification.Id, $"Kanalen {notification.Channel} er ikke sat op.", cancellationToken);
@@ -195,7 +222,7 @@ public class NotificationManager(
                     Body = notification.Body,
                     Url = notification.Url,
                     Tag = $"{notification.Kind}:{notification.Url}",
-                    Urgency = notification.Kind == KindShiftsOpened ? PushUrgency.High : PushUrgency.Normal
+                    Urgency = notification.Kind == NotificationKinds.ShiftsOpened ? PushUrgency.High : PushUrgency.Normal
                 }, cancellationToken);
 
                 if (response.Status == PushDeliveryStatus.Delivered)
@@ -229,9 +256,81 @@ public class NotificationManager(
         }
         else
         {
-            var attempt = notification.Attempts + 1;
-            DateTime? next = attempt < MaxAttempts ? now + RetryDelays[Math.Min(attempt - 1, RetryDelays.Length - 1)] : null;
-            await notificationRepository.MarkAttemptFailedAsync(notification.Id, errors[0], next, cancellationToken);
+            await notificationRepository.MarkAttemptFailedAsync(notification.Id, errors[0], NextAttempt(notification, now), cancellationToken);
         }
+    }
+
+    private async Task SendEmailAsync(NotificationDto notification, CancellationToken cancellationToken)
+    {
+        if (!await mailService.IsConfiguredAsync(cancellationToken))
+        {
+            await FinishAsync(notification, notificationRepository.MarkSkippedAsync(notification.Id,
+                "E-mail er ikke sat op (Mail:FromAddress og Mail:Smtp:Host, eller Mail:PickupDirectory).", cancellationToken), cancellationToken);
+            return;
+        }
+
+        var user = await userRepository.GetByIdAsync(notification.UserId, cancellationToken);
+        if (user is null || !user.IsActive)
+        {
+            await FinishAsync(notification, notificationRepository.MarkSkippedAsync(notification.Id, "Brugeren findes ikke eller er deaktiveret.", cancellationToken), cancellationToken);
+            return;
+        }
+
+        var text = MailTemplates.Wrap(user.DisplayName, notification.Body);
+        var url = string.IsNullOrWhiteSpace(notification.Url) ? null : notification.Url;
+        try
+        {
+            await mailService.SendAsync(new SendMailRequestDto
+            {
+                ToAddress = user.UserName,
+                ToName = user.DisplayName,
+                Subject = notification.Title,
+                TextBody = text,
+                HtmlBody = MailTemplates.ToHtml(notification.Title, text, url, NotificationKinds.ButtonText(notification.Kind))
+            }, cancellationToken);
+            await FinishAsync(notification, notificationRepository.MarkSentAsync(notification.Id, timeProvider.GetUtcNow().UtcDateTime, cancellationToken), cancellationToken);
+        }
+        catch (MailException ex)
+        {
+            // Køen registrerer fejlen og prøver igen (bevidst afvigelse, se projektfilen). En afvist modtager prøves ikke igen.
+            logger.LogWarning("Mail for notification {NotificationId} ({Kind}) failed: {Error}", notification.Id, notification.Kind, ex.Message);
+            var next = ex.StatusCode == System.Net.HttpStatusCode.BadRequest ? null : NextAttempt(notification, timeProvider.GetUtcNow().UtcDateTime);
+            await notificationRepository.MarkAttemptFailedAsync(notification.Id, ex.Message, next, cancellationToken);
+            if (next is null && NotificationKinds.ContainsSecretLink(notification.Kind))
+            {
+                await notificationRepository.ClearContentAsync(notification.Id, cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>Afslutter en besked. Indeholder den et engangslink, tømmes teksten, så linket ikke ligger i databasen.</summary>
+    private async Task FinishAsync(NotificationDto notification, Task<bool> mark, CancellationToken cancellationToken)
+    {
+        await mark;
+        if (NotificationKinds.ContainsSecretLink(notification.Kind))
+        {
+            await notificationRepository.ClearContentAsync(notification.Id, cancellationToken);
+        }
+    }
+
+    private static DateTime? NextAttempt(NotificationDto notification, DateTime now)
+    {
+        var attempt = notification.Attempts + 1;
+        return attempt < MaxAttempts ? now + RetryDelays[Math.Min(attempt - 1, RetryDelays.Length - 1)] : null;
+    }
+
+    /// <summary>Aktive brugere med e-mail-beskeder slået til (standard), når mail er sat op.</summary>
+    private async Task<List<Guid>> GetEmailRecipientsAsync(CancellationToken cancellationToken)
+    {
+        if (!await mailService.IsConfiguredAsync(cancellationToken))
+        {
+            return [];
+        }
+
+        var optedOut = await profileRepository.GetEmailOptOutUserIdsAsync(cancellationToken);
+        return (await userRepository.GetAllAsync(cancellationToken))
+            .Where(x => x.IsActive && !optedOut.Contains(x.Id))
+            .Select(x => x.Id)
+            .ToList();
     }
 }

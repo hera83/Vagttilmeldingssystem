@@ -30,6 +30,15 @@ public class UserRepository(WebDbContext dbContext) : IUserRepository
             .Select(UserMapper.ToDtoExpression)
             .FirstOrDefaultAsync(cancellationToken);
 
+    public Task<UserDto?> GetByUserNameAsync(string userName, CancellationToken cancellationToken = default)
+    {
+        var name = userName.Trim();
+        return dbContext.Users.AsNoTracking()
+            .Where(x => x.UserName == name)
+            .Select(UserMapper.ToDtoExpression)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<UserDto?> ValidateCredentialsAsync(string userName, string password, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.Users.FirstOrDefaultAsync(x => x.UserName == userName.Trim(), cancellationToken);

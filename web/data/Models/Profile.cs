@@ -19,4 +19,7 @@ public class Profile : EntityBase
 
     public string ChildName { get; set; } = string.Empty;
     public string ChildClass { get; set; } = string.Empty;
+
+    /// <summary>E-mails om frigivelser, bekræftelser og påmindelser. Invitation og nulstilling sendes altid.</summary>
+    public bool EmailNotifications { get; set; } = true;
 }

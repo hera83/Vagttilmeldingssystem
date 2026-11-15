@@ -1,9 +1,13 @@
 using web.Data.Models;
+using web.Extensions;
+using web.Infrastructure.Notifications;
 using web.Infrastructure.Realtime;
 using web.Managers.Enrollment.Dtos;
 using web.Managers.Enrollment.Interfaces;
 using web.Repositories.Assignments.Dtos;
 using web.Repositories.Assignments.Interfaces;
+using web.Repositories.Notifications.Dtos;
+using web.Repositories.Notifications.Interfaces;
 using web.Repositories.Profiles.Interfaces;
 using web.Repositories.Shifts.Interfaces;
 
@@ -13,7 +17,10 @@ public class EnrollmentManager(
     IShiftRepository shiftRepository,
     IAssignmentRepository assignmentRepository,
     IProfileRepository profileRepository,
-    IShiftUpdatesNotifier notifier) : IEnrollmentManager
+    IShiftUpdatesNotifier notifier,
+    INotificationRepository notificationRepository,
+    NotificationSignal notificationSignal,
+    AppLinks appLinks) : IEnrollmentManager
 {
     public async Task<AvailableOverviewDto> GetAvailableAsync(Guid userId, CancellationToken cancellationToken = default)
     {
@@ -73,7 +80,46 @@ public class EnrollmentManager(
             }, cancellationToken);
         }
 
+        await QueueConfirmationAsync(userId, result.CreatedShiftIds, cancellationToken);
         return new EnrollResultDto { Status = EnrollStatus.Success, CreatedShiftIds = result.CreatedShiftIds };
+    }
+
+    /// <summary>Bekræftelsesmail med de vagter, brugeren netop er tilmeldt (kun egne vagter, dansk tid). Sendes via køen.</summary>
+    private async Task QueueConfirmationAsync(Guid userId, IReadOnlyCollection<Guid> shiftIds, CancellationToken cancellationToken)
+    {
+        if (!await profileRepository.GetEmailNotificationsAsync(userId, cancellationToken))
+        {
+            return;
+        }
+
+        var lines = (await assignmentRepository.GetActiveForUserAsync(userId, cancellationToken))
+            .Where(x => shiftIds.Contains(x.ShiftId))
+            .OrderBy(x => x.StartUtc)
+            .Select(x => new MailShiftLine(x.Title, x.EventName,
+                $"{x.StartUtc.ToDanishDateText()} kl. {DateTimeExtensions.ToDanishTimeRangeText(x.StartUtc, x.EndUtc)}", x.EventLocation))
+            .ToList();
+        if (lines.Count == 0)
+        {
+            return;
+        }
+
+        var link = appLinks.TryAbsolute("/MyShifts");
+        var mail = MailTemplates.EnrollmentConfirmation(lines, link);
+        await notificationRepository.CreateManyAsync(
+        [
+            new CreateNotificationDto
+            {
+                UserId = userId,
+                Channel = NotificationChannel.Email,
+                Kind = NotificationKinds.EnrollmentConfirmation,
+                Title = mail.Subject,
+                Body = mail.Body,
+                Url = link ?? string.Empty,
+                DedupKey = $"enroll:{userId:N}:{Guid.NewGuid():N}",
+                NotBeforeUtc = DateTime.UtcNow
+            }
+        ], cancellationToken);
+        notificationSignal.Notify();
     }
 
     public async Task<HomeOverviewDto> GetHomeAsync(Guid userId, CancellationToken cancellationToken = default)

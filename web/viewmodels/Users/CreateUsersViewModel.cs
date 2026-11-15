@@ -15,7 +15,12 @@ public class CreateUsersViewModel
     [Display(Name = "Navn")]
     public string DisplayName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Skriv en adgangskode.")]
+    /// <summary>Standard til i formularen (sættes af GET). Så vælger brugeren selv sin adgangskode via et link i en mail.</summary>
+    [Display(Name = "Send invitation på e-mail")]
+    public bool SendInvitation { get; set; }
+
+    /// <summary>Kun når der ikke sendes invitation. Controlleren fjerner kravet, når SendInvitation er valgt.</summary>
+    [Required(ErrorMessage = "Skriv en adgangskode, eller vælg Send invitation på e-mail.")]
     [StringLength(200, MinimumLength = 12, ErrorMessage = "Adgangskoden skal være mindst {2} tegn.")]
     [DataType(DataType.Password)]
     [Display(Name = "Adgangskode")]

@@ -13,6 +13,7 @@
 | `GetByDedupKeyAsync(string dedupKey)` | Én besked ud fra nøglen, eller `null`. |
 | `MarkSentAsync(Guid id, DateTime sentAtUtc)` | `Sent` + `SentAt`. |
 | `MarkSkippedAsync(Guid id, string reason)` | `Skipped` med årsagen i `LastError` (fx ingen enheder). |
+| `ClearContentAsync(Guid id)` | Tømmer `Body` og `Url`. Bruges efter mails med engangslinks (invitation, nulstilling). |
 | `MarkAttemptFailedAsync(Guid id, string error, DateTime? nextAttemptAtUtc)` | Tæller forsøget. Med et tidspunkt prøves igen da (`Pending`), uden opgives beskeden (`Failed`). |
 
 ## DedupKey

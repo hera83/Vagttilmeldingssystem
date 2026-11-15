@@ -18,6 +18,8 @@ using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
 using web.Infrastructure.Notifications;
 using web.Infrastructure.Realtime;
+using web.Managers.AccountRecovery;
+using web.Managers.AccountRecovery.Interfaces;
 using web.Managers.Assignments;
 using web.Managers.Assignments.Interfaces;
 using web.Managers.Enrollment;
@@ -36,6 +38,8 @@ using web.Repositories.Logs;
 using web.Repositories.Logs.Interfaces;
 using web.Repositories.Notifications;
 using web.Repositories.Notifications.Interfaces;
+using web.Repositories.PasswordTokens;
+using web.Repositories.PasswordTokens.Interfaces;
 using web.Repositories.Profiles;
 using web.Repositories.Profiles.Interfaces;
 using web.Repositories.PushSubscriptions;
@@ -45,6 +49,8 @@ using web.Repositories.Shifts.Interfaces;
 using web.Repositories.Users;
 using web.Repositories.Users.Dtos;
 using web.Repositories.Users.Interfaces;
+using web.Services.Mail;
+using web.Services.Mail.Interfaces;
 using web.Services.Push;
 using web.Services.Push.Interfaces;
 
@@ -124,6 +130,7 @@ builder.Services.AddSingleton<IShiftUpdatesNotifier, ShiftUpdatesNotifier>();
 
 // Køen af beskeder (step 10): signalet vækker NotificationWorker, og TimeProvider gør tiden testbar.
 builder.Services.AddSingleton<NotificationSignal>();
+builder.Services.AddSingleton<AppLinks>();
 builder.Services.AddSingleton(TimeProvider.System);
 
 // app.db (dbcontext.md). Data Source er relativ i appsettings og gøres absolut ud fra ContentRootPath.
@@ -170,6 +177,7 @@ builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 builder.Services.AddScoped<IPushSubscriptionRepository, PushSubscriptionRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IPasswordTokenRepository, PasswordTokenRepository>();
 
 // Managers
 builder.Services.AddScoped<IMemberManager, MemberManager>();
@@ -177,11 +185,14 @@ builder.Services.AddScoped<IPlanningManager, PlanningManager>();
 builder.Services.AddScoped<IAssignmentManager, AssignmentManager>();
 builder.Services.AddScoped<IEnrollmentManager, EnrollmentManager>();
 builder.Services.AddScoped<INotificationManager, NotificationManager>();
+builder.Services.AddScoped<IAccountRecoveryManager, AccountRecoveryManager>();
 
 // Eksterne services
 // Push (light pattern med biblioteket Lib.Net.Http.WebPush). Adressen er abonnementets, så klienten har ingen BaseAddress.
 builder.Services.AddHttpClient(PushService.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddScoped<IPushService, PushService>();
+// E-mail (light pattern uden HTTP, MailKit). Mail:PickupDirectory gemmer mails som .eml-filer (kun udvikling).
+builder.Services.AddScoped<IMailService, MailService>();
 
 // Workers
 builder.Services.AddHostedService<LogCleanupWorker>();

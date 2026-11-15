@@ -10,4 +10,7 @@ public class UserListItemViewModel
     public bool HasCompleteProfile { get; set; }
     public string LastLoginText { get; set; } = string.Empty;
     public bool IsCurrentUser { get; set; }
+
+    /// <summary>Har aldrig logget ind: så vises Send invitation.</summary>
+    public bool NeverLoggedIn { get; set; }
 }

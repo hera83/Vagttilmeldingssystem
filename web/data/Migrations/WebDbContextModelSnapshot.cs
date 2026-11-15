@@ -122,7 +122,7 @@ namespace web.data.Migrations
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasMaxLength(1000)
+                        .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Channel")
@@ -186,6 +186,47 @@ namespace web.data.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("web.Data.Models.PasswordToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Purpose");
+
+                    b.ToTable("PasswordTokens");
+                });
+
             modelBuilder.Entity("web.Data.Models.Profile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -212,6 +253,11 @@ namespace web.data.Migrations
 
                     b.Property<int>("DrinkTickets")
                         .HasColumnType("INTEGER");
+
+                    b.Property<bool>("EmailNotifications")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -419,6 +465,15 @@ namespace web.data.Migrations
                 });
 
             modelBuilder.Entity("web.Data.Models.Notification", b =>
+                {
+                    b.HasOne("web.Data.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("web.Data.Models.PasswordToken", b =>
                 {
                     b.HasOne("web.Data.Models.User", null)
                         .WithMany()

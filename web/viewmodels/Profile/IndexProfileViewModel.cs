@@ -51,6 +51,9 @@ public class IndexProfileViewModel : IValidatableObject
     /// <summary>Kun til visning.</summary>
     public bool IsComplete { get; set; }
 
+    /// <summary>Kun visning: e-mail-beskeder slået til (gemmes via NotificationsProfileViewModel).</summary>
+    public bool EmailNotifications { get; set; } = true;
+
     /// <summary>Kun til visning: valgmulighederne for trøjestørrelse.</summary>
     public IReadOnlyList<string> ShirtSizeOptions { get; set; } = ShirtSizes.All;
 

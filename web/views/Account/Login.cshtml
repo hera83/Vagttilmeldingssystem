@@ -37,7 +37,10 @@
                 <span asp-validation-for="Password"></span>
             </div>
 
-            <label class="checkbox"><input asp-for="RememberMe" /> @Html.DisplayNameFor(m => m.RememberMe)</label>
+            <div class="login-options">
+                <label class="checkbox"><input asp-for="RememberMe" /> @Html.DisplayNameFor(m => m.RememberMe)</label>
+                <a asp-action="ForgotPassword">Glemt adgangskode?</a>
+            </div>
 
             <button type="submit" class="btn btn-primary btn-block"><icon name="user" />Log ind</button>
         </form>

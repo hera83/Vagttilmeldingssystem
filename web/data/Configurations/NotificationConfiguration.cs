@@ -12,7 +12,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(10);
         builder.Property(x => x.Kind).HasMaxLength(50);
         builder.Property(x => x.Title).HasMaxLength(200);
-        builder.Property(x => x.Body).HasMaxLength(1000);
+        builder.Property(x => x.Body).HasMaxLength(4000);
         builder.Property(x => x.Url).HasMaxLength(500);
         builder.Property(x => x.DedupKey).HasMaxLength(200);
         builder.Property(x => x.LastError).HasMaxLength(1000);

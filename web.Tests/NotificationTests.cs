@@ -63,8 +63,10 @@ public class NotificationTests : IClassFixture<WebAppFactory>
             return queued;
         });
 
+    /// <summary>Brugerens push-beskeder i køen (frigivelser giver også e-mails, se EmailTests).</summary>
     private Task<List<Notification>> NotificationsForAsync(Guid userId) =>
-        With(sp => sp.GetRequiredService<WebDbContext>().Notifications.AsNoTracking().Where(x => x.UserId == userId).ToListAsync());
+        With(sp => sp.GetRequiredService<WebDbContext>().Notifications.AsNoTracking()
+            .Where(x => x.UserId == userId && x.Channel == NotificationChannel.Push).ToListAsync());
 
     [Fact]
     public async Task Frigivelse_GiverEnBeskedPrBrugerMedAbonnement_UdenPersondata()

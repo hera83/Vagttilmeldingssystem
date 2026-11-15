@@ -22,6 +22,7 @@ public static class ProfileMapper
         ChildName = x.ChildName,
         ChildClass = x.ChildClass,
         IsComplete = x.FullName != "" && x.Address != "" && x.Phone != "" && x.ShirtSize != "" && x.ChildName != "" && x.ChildClass != "",
+        EmailNotifications = x.EmailNotifications,
         UpdatedAt = x.UpdatedAt
     };
 

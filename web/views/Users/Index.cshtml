@@ -67,6 +67,12 @@ else
                         <td class="actions">
                             <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@user.Id" title="Ret"><icon name="edit" /><span class="btn-label">Ret</span><span class="visually-hidden"> @user.DisplayName</span></a>
                             <a class="btn btn-ghost btn-sm" asp-action="ResetPassword" asp-route-id="@user.Id" title="Ny adgangskode"><icon name="key" /><span class="btn-label">Ny adgangskode</span><span class="visually-hidden"> til @user.DisplayName</span></a>
+                            @if (user.NeverLoggedIn && user.IsActive)
+                            {
+                                <form asp-action="Invite" asp-route-id="@user.Id" method="post" data-confirm="Send en ny invitation til @user.UserName? Tidligere invitationslinks holder op med at virke.">
+                                    <button type="submit" class="btn btn-ghost btn-sm" title="Send invitation igen"><icon name="send" /><span class="btn-label">Send invitation</span><span class="visually-hidden"> til @user.DisplayName</span></button>
+                                </form>
+                            }
                             @if (!user.IsCurrentUser)
                             {
                                 <form asp-action="Delete" asp-route-id="@user.Id" method="post" data-confirm="Vil du slette @user.DisplayName? Det kan ikke fortrydes.">

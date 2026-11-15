@@ -131,6 +131,18 @@
                 <button type="button" class="btn btn-secondary btn-sm" data-push-test hidden><icon name="send" />Send testbesked</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-push-disable hidden><icon name="x" />Slå fra</button>
             </div>
+            <div class="setting-row mt-1">
+                <span class="card-icon"><icon name="mail" /></span>
+                <div class="setting-main">
+                    <strong>E-mail-beskeder</strong>
+                    <span class="muted small">Mails om nye vagter, bekræftelse, når du tilmelder dig, og påmindelser før dine vagter. Mails om adgangskode sendes altid.</span>
+                    <span class="badge @(Model.EmailNotifications ? "badge-open" : "badge-neutral")">@(Model.EmailNotifications ? "Slået til" : "Slået fra")</span>
+                </div>
+            </div>
+            <form asp-action="Notifications" method="post" class="mb-0">
+                <input type="hidden" name="EmailNotifications" value="@(Model.EmailNotifications ? "false" : "true")" />
+                <button type="submit" class="btn @(Model.EmailNotifications ? "btn-ghost" : "btn-secondary") btn-sm"><icon name="mail" />@(Model.EmailNotifications ? "Slå e-mails fra" : "Slå e-mails til")</button>
+            </form>
         </section>
 
         <section class="card" aria-labelledby="security-title">

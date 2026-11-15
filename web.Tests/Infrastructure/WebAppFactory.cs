@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using web.Repositories.Users.Dtos;
 using web.Repositories.Users.Interfaces;
+using web.Services.Mail.Interfaces;
 using web.Services.Push.Interfaces;
 
 namespace web.Tests.Infrastructure;
@@ -26,6 +27,11 @@ public class WebAppFactory : WebApplicationFactory<Program>
     /// <summary>Falsk push-service (sender intet over nettet). Testene kan styre den og se, hvad der er sendt.</summary>
     public FakePushService Push { get; } = new();
 
+    /// <summary>Falsk mail-service (sender intet). Testene kan se, hvilke mails der er "sendt".</summary>
+    public FakeMailService Mail { get; } = new();
+
+    public const string BaseUrl = "http://vagter.test";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         Directory.CreateDirectory(RootPath);
@@ -36,10 +42,13 @@ public class WebAppFactory : WebApplicationFactory<Program>
         builder.UseSetting("Users:InitialAdmin:Password", AdminPassword);
         // NotificationWorker kører ikke i testene, så de selv kan styre køen via INotificationManager (se NotificationWorkerTests).
         builder.UseSetting("Notifications:WorkerEnabled", "false");
+        builder.UseSetting("App:BaseUrl", BaseUrl);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IPushService>();
             services.AddSingleton<IPushService>(Push);
+            services.RemoveAll<IMailService>();
+            services.AddSingleton<IMailService>(Mail);
         });
         ConfigureTestServices(builder);
     }

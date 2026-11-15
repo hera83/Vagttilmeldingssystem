@@ -17,7 +17,8 @@ public static class ProfileViewModelMapper
                 DrinkTickets = profile.DrinkTickets,
                 TivoliSheets = profile.TivoliSheets,
                 ChildName = profile.ChildName,
-                ChildClass = profile.ChildClass
+                ChildClass = profile.ChildClass,
+                EmailNotifications = profile.EmailNotifications
             };
 
         model.FillDisplayFields(email, profile?.IsComplete == true);

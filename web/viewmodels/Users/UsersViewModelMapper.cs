@@ -1,4 +1,5 @@
 using web.Extensions;
+using web.Managers.AccountRecovery.Dtos;
 using web.Managers.Members.Dtos;
 using web.Repositories.Users.Dtos;
 
@@ -17,6 +18,7 @@ public static class UsersViewModelMapper
             IsActive = x.User.IsActive,
             HasCompleteProfile = x.HasCompleteProfile,
             LastLoginText = x.User.LastLoginAt is null ? "Aldrig" : x.User.LastLoginAt.Value.ToDanishShortDateTimeText(),
+            NeverLoggedIn = x.User.LastLoginAt is null,
             IsCurrentUser = x.User.Id == currentUserId
         }).ToList()
     };
@@ -67,5 +69,12 @@ public static class UsersViewModelMapper
     {
         UserName = user.UserName,
         DisplayName = user.DisplayName
+    };
+
+    public static InviteUserDto ToInviteUserDto(this CreateUsersViewModel model) => new()
+    {
+        UserName = model.UserName.Trim(),
+        DisplayName = model.DisplayName.Trim(),
+        IsAdmin = model.IsAdmin
     };
 }

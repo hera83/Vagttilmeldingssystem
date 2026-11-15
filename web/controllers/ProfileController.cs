@@ -31,11 +31,25 @@ public class ProfileController(IProfileRepository profileRepository) : Controlle
         if (!ModelState.IsValid)
         {
             model.FillDisplayFields(User.Identity?.Name ?? string.Empty, isComplete: false);
+            model.EmailNotifications = await profileRepository.GetEmailNotificationsAsync(userId, cancellationToken);
             return View(model);
         }
 
         await profileRepository.SaveAsync(userId, model.ToSaveProfileDto(), cancellationToken);
         TempData["Success"] = "Din profil er gemt.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Notifications(NotificationsProfileViewModel model, CancellationToken cancellationToken)
+    {
+        if (UserPrincipalFactory.GetUserId(User) is not { } userId)
+        {
+            return Challenge();
+        }
+
+        await profileRepository.SetEmailNotificationsAsync(userId, model.EmailNotifications, cancellationToken);
+        TempData["Success"] = model.EmailNotifications ? "E-mail-beskeder er slået til." : "E-mail-beskeder er slået fra.";
         return RedirectToAction(nameof(Index));
     }
 }

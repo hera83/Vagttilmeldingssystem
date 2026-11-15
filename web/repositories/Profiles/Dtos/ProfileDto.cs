@@ -14,6 +14,7 @@ public class ProfileDto
 
     /// <summary>Alle påkrævede felter er udfyldt (krav K02/K03).</summary>
     public bool IsComplete { get; set; }
+    public bool EmailNotifications { get; set; } = true;
 
     public DateTime UpdatedAt { get; set; }
 }

@@ -6,7 +6,7 @@
 <div class="page-header">
     <div>
         <h1>Opret bruger</h1>
-        <p>Brugeren logger ind med sin e-mail. Giv adgangskoden videre på en sikker måde, og bed brugeren skifte den.</p>
+        <p>Brugeren logger ind med sin e-mail. Med en invitation vælger brugeren selv sin adgangskode via et link i en mail, så du aldrig kender den.</p>
     </div>
 </div>
 
@@ -26,10 +26,13 @@
             <span asp-validation-for="DisplayName"></span>
         </div>
 
+        <label class="checkbox"><input asp-for="SendInvitation" /> @Html.DisplayNameFor(m => m.SendInvitation)</label>
+        <p class="help mb-1">Brugeren får en mail med et link til at vælge sin adgangskode. Linket gælder i 7 dage.</p>
+
         <div class="field">
-            <label asp-for="Password" class="required"></label>
+            <label asp-for="Password"></label>
             <input asp-for="Password" autocomplete="new-password" />
-            <span class="help">Mindst 12 tegn.</span>
+            <span class="help">Kun hvis du ikke sender invitation. Mindst 12 tegn. Giv den videre på en sikker måde.</span>
             <span asp-validation-for="Password"></span>
         </div>
 

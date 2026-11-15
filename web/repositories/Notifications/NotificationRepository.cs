@@ -79,5 +79,15 @@ public class NotificationRepository(WebDbContext dbContext) : INotificationRepos
                 .SetProperty(x => x.UpdatedAt, now), cancellationToken) > 0;
     }
 
+    public async Task<bool> ClearContentAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        return await dbContext.Notifications.Where(x => x.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.Body, string.Empty)
+                .SetProperty(x => x.Url, string.Empty)
+                .SetProperty(x => x.UpdatedAt, now), cancellationToken) > 0;
+    }
+
     private static string Truncate(string value) => value.Length <= MaxErrorLength ? value : value[..MaxErrorLength];
 }

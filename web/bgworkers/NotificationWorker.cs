@@ -1,5 +1,6 @@
 using web.Managers.Notifications;
 using web.Managers.Notifications.Interfaces;
+using web.Services.Mail.Interfaces;
 using web.Services.Push.Interfaces;
 using web.Infrastructure.Notifications;
 
@@ -24,7 +25,7 @@ public class NotificationWorker(
         }
 
         var interval = TimeSpan.FromSeconds(Math.Max(1, configuration.GetValue("Notifications:WorkerIntervalSeconds", 30)));
-        await WarnIfPushIsNotConfiguredAsync(stoppingToken);
+        await WarnIfNotConfiguredAsync(stoppingToken);
 
         try
         {
@@ -58,7 +59,7 @@ public class NotificationWorker(
         }
     }
 
-    private async Task WarnIfPushIsNotConfiguredAsync(CancellationToken cancellationToken)
+    private async Task WarnIfNotConfiguredAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -67,6 +68,21 @@ public class NotificationWorker(
             if (await push.GetPublicKeyAsync(cancellationToken) is null)
             {
                 logger.LogWarning("Push is not configured: set Push:PublicKey, Push:PrivateKey and Push:Subject (generate keys with --generate-vapid-keys). Push notifications are not sent.");
+            }
+
+            var mail = scope.ServiceProvider.GetRequiredService<IMailService>();
+            if (!await mail.IsConfiguredAsync(cancellationToken))
+            {
+                logger.LogWarning("Mail is not configured: set Mail:FromAddress and Mail:Smtp:* (or Mail:PickupDirectory in development). E-mails are not sent.");
+            }
+            else if (configuration["Mail:PickupDirectory"] is { Length: > 0 })
+            {
+                logger.LogWarning("Mail:PickupDirectory is set: e-mails are saved as .eml files and not sent.");
+            }
+
+            if (scope.ServiceProvider.GetRequiredService<AppLinks>().BaseUrl is null)
+            {
+                logger.LogWarning("App:BaseUrl is not set: invitations and password resets cannot be sent, and other e-mails have no links.");
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

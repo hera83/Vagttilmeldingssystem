@@ -11,6 +11,7 @@
 | `AnyAsync()` | Findes der brugere? Bruges til første administrator ved opstart. |
 | `GetAllAsync()` | Alle brugere sorteret efter brugernavn. |
 | `GetByIdAsync(Guid id)` | Én bruger, eller `null`. Bruges også af `UserCookieEvents` ved hvert request. |
+| `GetByUserNameAsync(string userName)` | Én bruger ud fra e-mailen (uden forskel på store og små bogstaver), eller `null`. Bruges til glemt adgangskode. |
 | `ValidateCredentialsAsync(string userName, string password)` | Aktiv bruger med korrekt adgangskode, ellers `null`. Sætter `LastLoginAt` og opgraderer hashet, hvis `PasswordHasher` beder om det. |
 | `CreateAsync(CreateUserDto dto)` | Opretter og returnerer brugeren, eller `null`, hvis brugernavnet findes. |
 | `UpdateAsync(Guid id, UpdateUserDto dto)` | Opdaterer, eller `null`. Skifter `SecurityStamp`, hvis `IsActive` ændres. |

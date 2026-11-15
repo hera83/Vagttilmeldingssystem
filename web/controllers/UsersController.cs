@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using web.Infrastructure.Authentication;
+using web.Managers.AccountRecovery.Dtos;
+using web.Managers.AccountRecovery.Interfaces;
 using web.Managers.Members.Dtos;
 using web.Managers.Members.Interfaces;
 using web.Repositories.Users.Dtos;
@@ -12,7 +14,7 @@ using web.ViewModels.Users;
 namespace web.Controllers;
 
 [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
-public class UsersController(IUserRepository userRepository, IMemberManager memberManager) : Controller
+public class UsersController(IUserRepository userRepository, IMemberManager memberManager, IAccountRecoveryManager accountRecoveryManager) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -34,13 +36,39 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
     }
 
     [HttpGet]
-    public IActionResult Create() => View(new CreateUsersViewModel());
+    public IActionResult Create() => View(new CreateUsersViewModel { SendInvitation = true });
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateUsersViewModel model, CancellationToken cancellationToken)
     {
+        if (model.SendInvitation)
+        {
+            // Med invitation vælger brugeren selv sin adgangskode.
+            ModelState.Remove(nameof(model.Password));
+        }
+
         if (!ModelState.IsValid)
         {
+            model.Password = string.Empty;
+            return View(model);
+        }
+
+        if (model.SendInvitation)
+        {
+            var invited = await accountRecoveryManager.InviteNewUserAsync(model.ToInviteUserDto(), cancellationToken);
+            switch (invited.Status)
+            {
+                case InviteUserStatus.Success:
+                    TempData["Success"] = $"Brugeren {invited.User!.DisplayName} er oprettet, og der er sendt en invitation til {invited.User.UserName}.";
+                    return RedirectToAction(nameof(Index));
+                case InviteUserStatus.UserNameTaken:
+                    ModelState.AddModelError(nameof(model.UserName), "Der findes allerede en bruger med denne e-mail.");
+                    break;
+                default:
+                    ModelState.AddModelError(string.Empty, "Der kan ikke sendes e-mails, fordi e-mail (Mail) eller App:BaseUrl ikke er sat op. Fjern fluebenet ved Send invitation på e-mail, og skriv en adgangskode i stedet.");
+                    break;
+            }
+
             model.Password = string.Empty;
             return View(model);
         }
@@ -170,6 +198,27 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
         TempData[result == DeleteMemberResult.Deleted ? "Success" : "Error"] = result == DeleteMemberResult.Deleted
             ? "Brugeren er slettet."
             : "Brugeren har vagter og kan ikke slettes, så historikken bevares. Deaktivér brugeren i stedet under Ret.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Invite(Guid id, CancellationToken cancellationToken)
+    {
+        switch (await accountRecoveryManager.SendInvitationAsync(id, cancellationToken))
+        {
+            case SendInvitationResult.NotFound:
+                return NotFound();
+            case SendInvitationResult.Sent:
+                TempData["Success"] = "Der er sendt en ny invitation. Tidligere invitationslinks virker ikke længere.";
+                break;
+            case SendInvitationResult.Inactive:
+                TempData["Error"] = "Brugeren er deaktiveret. Gør brugeren aktiv under Ret først.";
+                break;
+            default:
+                TempData["Error"] = "Der kan ikke sendes e-mails, fordi e-mail (Mail) eller App:BaseUrl ikke er sat op.";
+                break;
+        }
+
         return RedirectToAction(nameof(Index));
     }
 }

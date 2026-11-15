@@ -12,6 +12,7 @@ public class WebDbContext(DbContextOptions<WebDbContext> options) : DbContext(op
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<PasswordToken> PasswordTokens => Set<PasswordToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
