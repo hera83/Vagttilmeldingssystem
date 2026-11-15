@@ -1,0 +1,47 @@
+# Følger .claude/gitignore.md. Ret reglerne dér, og hold denne fil i trit.
+
+# Alle mapper, der starter med punktum: IDE, værktøjer, AI-instrukser, planer, manualer og lokale secrets
+# (.vs, .vscode, .idea, .claude, .project, .manuals, .poc, .secrets, .config …). Ingen undtagelser.
+.*/
+
+# AI-instrukser i alle dybder
+CLAUDE.md
+
+# Kompileret output
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+*.dll
+*.pdb
+
+# Secrets
+appsettings.Development.json
+.env
+.env.*
+!.env.example
+
+# Databaser: kun .gitkeep må med
+**/app_dbs/**
+!**/app_dbs/.gitkeep
+*.db
+*.db-shm
+*.db-wal
+
+# Appens filer: alle filer ignoreres, mappestrukturen bevares med .gitkeep
+**/app_files/**
+!**/app_files/**/
+!**/app_files/**/.gitkeep
+
+# Lokal støj: IDE, OS, logs, tests og NuGet
+*.user
+*.suo
+*.userprefs
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+*.nupkg
+*.snupkg
+[Tt]est[Rr]esults/
+*.trx
