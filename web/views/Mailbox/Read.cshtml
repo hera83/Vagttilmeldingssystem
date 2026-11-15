@@ -1,0 +1,83 @@
+@model web.ViewModels.Mailbox.ReadMailboxViewModel
+@{
+    ViewData["Title"] = Model.Subject;
+}
+<a class="back-link" asp-action="Index" asp-route-folder="@Model.Folder"><icon name="arrow-left" />Tilbage til @Model.FolderTitle</a>
+<div class="page-header">
+    <div>
+        <h1>@Model.Subject</h1>
+    </div>
+    <div class="page-actions">
+        @if (!Model.IsSent)
+        {
+            <a class="btn btn-primary" asp-action="Reply" asp-route-id="@Model.Uid" asp-route-folder="@Model.Folder"><icon name="reply" />Svar</a>
+        }
+        <form asp-action="MarkUnread" asp-route-id="@Model.Uid" asp-route-folder="@Model.Folder" method="post">
+            <button type="submit" class="btn btn-secondary"><icon name="mail" />Markér som ulæst</button>
+        </form>
+        <form asp-action="Delete" asp-route-id="@Model.Uid" asp-route-folder="@Model.Folder" method="post"
+              data-confirm="@(Model.IsTrash ? "Vil du slette mailen helt? Det kan ikke fortrydes." : "Vil du flytte mailen til Papirkurv?")">
+            <button type="submit" class="btn btn-danger"><icon name="trash" />@(Model.IsTrash ? "Slet helt" : "Slet")</button>
+        </form>
+    </div>
+</div>
+
+<section class="card mail-read" aria-label="Mailen">
+    <dl class="details mail-headers">
+        <dt>Fra</dt>
+        <dd>
+            @Model.FromText
+            @if (Model.KnownUserId is not null)
+            {
+                <a class="badge badge-open" asp-controller="Users" asp-action="Profile" asp-route-id="@Model.KnownUserId"><icon name="user" />@Model.KnownUserName</a>
+            }
+        </dd>
+        <dt>Til</dt>
+        <dd>@Model.ToText</dd>
+        @if (!string.IsNullOrEmpty(Model.CcText))
+        {
+            <dt>Cc</dt>
+            <dd>@Model.CcText</dd>
+        }
+        <dt>Dato</dt>
+        <dd>@Model.DateText</dd>
+    </dl>
+
+    @if (Model.SafeHtml is not null && !string.IsNullOrWhiteSpace(Model.Text))
+    {
+        <p class="muted small">
+            @if (Model.ShowHtml)
+            {
+                <a asp-action="Read" asp-route-id="@Model.Uid" asp-route-folder="@Model.Folder">Vis som tekst</a>
+            }
+            else
+            {
+                <a asp-action="Read" asp-route-id="@Model.Uid" asp-route-folder="@Model.Folder" asp-route-html="true">Vis formateret udgave</a>
+            }
+            · Billeder vises ikke, og links åbner i et nyt vindue.
+        </p>
+    }
+
+    @if (Model.ShowHtml)
+    {
+        <div class="mail-html">@Html.Raw(Model.SafeHtml)</div>
+    }
+    else
+    {
+        <div class="mail-text">@Model.Text</div>
+    }
+
+    @if (Model.Attachments.Count > 0)
+    {
+        <h2 class="mail-attachments-title">Vedhæftede filer</h2>
+        <ul class="mail-attachments">
+            @foreach (var file in Model.Attachments)
+            {
+                <li>
+                    <a asp-action="Attachment" asp-route-id="@Model.Uid" asp-route-folder="@Model.Folder" asp-route-index="@file.Index"><icon name="download" />@file.FileName</a>
+                    <span class="muted small">@file.SizeText</span>
+                </li>
+            }
+        </ul>
+    }
+</section>

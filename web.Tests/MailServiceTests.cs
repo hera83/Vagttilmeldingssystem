@@ -45,6 +45,49 @@ public class MailServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Svar_FaarInReplyToOgReferences()
+    {
+        var service = Create(new() { ["Mail:FromAddress"] = "system@example.com", ["Mail:PickupDirectory"] = "app_files/MailPickup" });
+        var request = Request();
+        request.InReplyTo = "original@forælder.test";
+        request.References = ["start@test.local"];
+        request.SaveCopyToSent = true;
+
+        var response = await service.SendAsync(request);
+
+        Assert.Null(response.SentCopyError);
+        var message = await MimeMessage.LoadAsync(Assert.Single(Directory.GetFiles(Path.Combine(_root, "app_files", "MailPickup"), "*.eml")));
+        Assert.Equal("original@forælder.test", message.InReplyTo);
+        Assert.Equal(["start@test.local", "original@forælder.test"], message.References.ToArray());
+    }
+
+    [Fact]
+    public async Task Postkasse_UdenImap_Giver500MedNoeglensNavn()
+    {
+        var service = Create(new() { ["Mail:FromAddress"] = "system@example.com" });
+
+        Assert.False(await service.IsMailboxConfiguredAsync());
+        var ex = await Assert.ThrowsAsync<MailException>(() => service.ListMessagesAsync(new web.Services.Mail.Dtos.Mailbox.ListMessagesRequestDto()));
+        Assert.Equal(HttpStatusCode.InternalServerError, ex.StatusCode);
+        Assert.Contains("Mail:Imap:Host", ex.Message);
+    }
+
+    [Fact]
+    public async Task Postkasse_KanIkkeNaas_Giver502()
+    {
+        var service = Create(new()
+        {
+            ["Mail:Imap:Host"] = "127.0.0.1", ["Mail:Imap:Port"] = "1", ["Mail:Imap:Security"] = "None",
+            ["Mail:Imap:UserName"] = "system", ["Mail:Imap:Password"] = "hemmelig-adgangskode"
+        });
+
+        var ex = await Assert.ThrowsAsync<MailException>(() => service.GetMailboxStatusAsync());
+        Assert.Equal(HttpStatusCode.BadGateway, ex.StatusCode);
+        Assert.Contains("Mail:Imap:Host", ex.Message);
+        Assert.DoesNotContain("hemmelig-adgangskode", ex.Message);
+    }
+
+    [Fact]
     public async Task UdenAfsender_Giver500MedNoeglensNavn()
     {
         var service = Create(new() { ["Mail:PickupDirectory"] = "app_files/MailPickup" });

@@ -1,0 +1,46 @@
+@model web.ViewModels.Mailbox.ComposeMailboxViewModel
+@{
+    ViewData["Title"] = "Skriv ny mail";
+}
+<a class="back-link" asp-action="Index"><icon name="arrow-left" />Tilbage til Indbakke</a>
+<div class="page-header">
+    <div>
+        <h1>Skriv ny mail</h1>
+        <p>Mailen sendes fra systemets postkasse. Vælg en bruger fra listen, eller skriv en adresse.</p>
+    </div>
+</div>
+
+<div class="card form form-wide">
+    <form asp-action="Compose" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div class="field">
+            <label asp-for="ToAddress" class="required"></label>
+            <input asp-for="ToAddress" type="email" list="recipients" autocomplete="off" />
+            <datalist id="recipients">
+                @foreach (var recipient in Model.Recipients)
+                {
+                    <option value="@recipient.Email">@recipient.DisplayName</option>
+                }
+            </datalist>
+            <span asp-validation-for="ToAddress"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Subject" class="required"></label>
+            <input asp-for="Subject" />
+            <span asp-validation-for="Subject"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Body" class="required"></label>
+            <textarea asp-for="Body" rows="14" class="mail-body"></textarea>
+            <span asp-validation-for="Body"></span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><icon name="send" />Send</button>
+            <a class="btn btn-ghost" asp-action="Index">Annuller</a>
+        </div>
+    </form>
+</div>

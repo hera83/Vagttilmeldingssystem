@@ -1,0 +1,78 @@
+@model web.ViewModels.Mailbox.IndexMailboxViewModel
+@{
+    ViewData["Title"] = Model.FolderTitle;
+}
+<div class="page-header">
+    <div>
+        <h1>@Model.FolderTitle</h1>
+        <p>Systemets egen postkasse. Svar fra forældre på systemets mails lander her.@(Model.Folder == "inbox" && Model.Error is null ? $" {Model.UnreadCount} ulæste." : "")</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Compose"><icon name="mail" />Skriv ny mail</a>
+    </div>
+</div>
+
+<div class="toolbar">
+    <partial name="_MailboxTabsPartial" model="Model.Folder" />
+    <form asp-action="Index" method="get" class="search" role="search">
+        <input type="hidden" name="folder" value="@Model.Folder" />
+        <label for="q" class="visually-hidden">Søg i @Model.FolderTitle</label>
+        <input id="q" name="q" type="search" value="@Model.Search" placeholder="Søg i afsender og emne …" />
+        <button type="submit" class="btn btn-ghost"><icon name="search" /><span class="hide-sm">Søg</span></button>
+    </form>
+</div>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-warning" role="status"><icon name="alert-triangle" /><p>@Model.Error</p></div>
+}
+else if (Model.Items.Count == 0)
+{
+    <div class="card empty-state">
+        <icon name="inbox" />
+        <h2>@(string.IsNullOrWhiteSpace(Model.Search) ? $"{Model.FolderTitle} er tom" : $"Ingen mails matcher »{Model.Search}«")</h2>
+    </div>
+}
+else
+{
+    <ul class="item-list mail-list" aria-label="@Model.FolderTitle">
+        @foreach (var mail in Model.Items)
+        {
+            <li>
+                <a class="item-row @(mail.Seen ? "" : "is-unread")" asp-action="Read" asp-route-id="@mail.Uid" asp-route-folder="@Model.Folder">
+                    <span class="card-icon"><icon name="@(mail.Seen ? "mail" : "inbox")" /></span>
+                    <span class="item-main">
+                        <strong>@mail.Subject</strong>
+                        <span class="meta">
+                            <span>@Model.PersonColumnTitle: @mail.PersonText@(mail.KnownUserId is not null ? " (bruger)" : "")</span>
+                            <span><icon name="clock" />@mail.DateText</span>
+                            @if (mail.HasAttachments)
+                            {
+                                <span><icon name="download" />Vedhæftet fil</span>
+                            }
+                        </span>
+                    </span>
+                    @if (!mail.Seen)
+                    {
+                        <span class="badge badge-open">Ulæst</span>
+                    }
+                    <icon name="chevron-right" class="item-chevron" />
+                </a>
+            </li>
+        }
+    </ul>
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="pager" aria-label="Sider">
+            @if (Model.Page > 1)
+            {
+                <a class="btn btn-ghost btn-sm" asp-action="Index" asp-route-folder="@Model.Folder" asp-route-q="@Model.Search" asp-route-page="@(Model.Page - 1)"><icon name="chevron-left" />Nyere</a>
+            }
+            <span class="muted small">Side @Model.Page af @Model.TotalPages (@Model.TotalCount mails)</span>
+            @if (Model.Page < Model.TotalPages)
+            {
+                <a class="btn btn-ghost btn-sm" asp-action="Index" asp-route-folder="@Model.Folder" asp-route-q="@Model.Search" asp-route-page="@(Model.Page + 1)">Ældre<icon name="chevron-right" /></a>
+            }
+        </nav>
+    }
+}

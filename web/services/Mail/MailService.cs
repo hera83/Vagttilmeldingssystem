@@ -40,7 +40,7 @@ public partial class MailService(IConfiguration configuration, IHostEnvironment 
             throw new MailException(HttpStatusCode.InternalServerError, "Mail:Smtp:Host er ikke sat (eller Mail:PickupDirectory til udvikling).");
         }
 
-        var security = ParseSecurity(configuration["Mail:Smtp:Security"]);
+        var security = ParseSecurity(configuration["Mail:Smtp:Security"], "Mail:Smtp:Security", SecureSocketOptions.StartTls);
         var port = int.TryParse(configuration["Mail:Smtp:Port"], out var configuredPort) && configuredPort > 0
             ? configuredPort
             : security == SecureSocketOptions.SslOnConnect ? 465 : 587;
@@ -64,7 +64,21 @@ public partial class MailService(IConfiguration configuration, IHostEnvironment 
             await client.DisconnectAsync(true, cancellationToken);
         }, cancellationToken);
 
-        return new SendMailResponseDto { MessageId = message.MessageId, Delivery = MailDelivery.Smtp };
+        var response = new SendMailResponseDto { MessageId = message.MessageId, Delivery = MailDelivery.Smtp };
+        if (request.SaveCopyToSent && configuration.GetValue("Mail:Imap:SaveSentCopy", true) && await IsMailboxConfiguredAsync(cancellationToken))
+        {
+            try
+            {
+                await AppendToSentAsync(message, cancellationToken);
+            }
+            catch (MailException ex)
+            {
+                // Mailen er sendt. Kun kopien mangler, og det skal kalderen kunne vise.
+                response.SentCopyError = ex.Message;
+            }
+        }
+
+        return response;
     }
 
     private MimeMessage CreateMessage(SendMailRequestDto request)
@@ -85,6 +99,20 @@ public partial class MailService(IConfiguration configuration, IHostEnvironment 
         message.From.Add(new MailboxAddress(string.IsNullOrWhiteSpace(fromName) ? "Vagttilmelding" : fromName, fromAddress));
         message.To.Add(new MailboxAddress(request.ToName, to.Address));
         message.Subject = request.Subject;
+        if (!string.IsNullOrWhiteSpace(request.InReplyTo))
+        {
+            message.InReplyTo = request.InReplyTo;
+            foreach (var reference in request.References.Where(x => !string.IsNullOrWhiteSpace(x)))
+            {
+                message.References.Add(reference);
+            }
+
+            if (!message.References.Contains(request.InReplyTo))
+            {
+                message.References.Add(request.InReplyTo);
+            }
+        }
+
         // Beder autosvar (fx "ude af kontoret") om ikke at svare. Almindelige svar fra forældre lander i systemets postkasse.
         message.Headers.Add("Auto-Submitted", "auto-generated");
         message.Body = new BodyBuilder { TextBody = request.TextBody, HtmlBody = request.HtmlBody }.ToMessageBody();
@@ -106,13 +134,13 @@ public partial class MailService(IConfiguration configuration, IHostEnvironment 
         }
     }
 
-    private static SecureSocketOptions ParseSecurity(string? value) =>
+    private static SecureSocketOptions ParseSecurity(string? value, string key, SecureSocketOptions fallback) =>
         string.IsNullOrWhiteSpace(value)
-            ? SecureSocketOptions.StartTls
+            ? fallback
             : Enum.TryParse<SecureSocketOptions>(value, ignoreCase: true, out var parsed)
                 ? parsed
                 : throw new MailException(HttpStatusCode.InternalServerError,
-                    $"Mail:Smtp:Security har en ukendt værdi. Brug StartTls, SslOnConnect eller None.");
+                    $"{key} har en ukendt værdi. Brug StartTls, SslOnConnect eller None.");
 
     // Alle SMTP-kald går herigennem, så bibliotekets fejl oversættes ét sted (services.md regel 15).
     private static async Task RunAsync(string host, int port, SecureSocketOptions security, Func<Task> action, CancellationToken cancellationToken)

@@ -25,6 +25,7 @@ public class DashboardManager(
     IPushService pushService,
     IMailService mailService,
     ReminderWorkerStatus reminderStatus,
+    MailboxStatus mailboxStatus,
     TimeProvider timeProvider) : IDashboardManager
 {
     public const int UpcomingEventCount = 6;
@@ -68,6 +69,7 @@ public class DashboardManager(
             Activity = await GetActivityAsync(cancellationToken),
             Notifications = await notificationRepository.GetStatsAsync(now - StatsPeriod, cancellationToken),
             Reminders = reminderStatus.Current,
+            Mailbox = mailboxStatus.Current,
             PushConfigured = await pushService.GetPublicKeyAsync(cancellationToken) is not null,
             MailConfigured = await mailService.IsConfiguredAsync(cancellationToken)
         };

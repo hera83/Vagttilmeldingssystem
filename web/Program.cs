@@ -16,6 +16,7 @@ using web.Data.Seeds;
 using web.Infrastructure.Authentication;
 using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
+using web.Infrastructure.Mail;
 using web.Infrastructure.Notifications;
 using web.Infrastructure.Realtime;
 using web.Managers.AccountRecovery;
@@ -23,6 +24,8 @@ using web.Managers.AccountRecovery.Interfaces;
 using web.Managers.Assignments;
 using web.Managers.Dashboard;
 using web.Managers.Dashboard.Interfaces;
+using web.Managers.Mailbox;
+using web.Managers.Mailbox.Interfaces;
 using web.Managers.Assignments.Interfaces;
 using web.Managers.Enrollment;
 using web.Managers.Enrollment.Interfaces;
@@ -136,6 +139,8 @@ builder.Services.AddSingleton<IShiftUpdatesNotifier, ShiftUpdatesNotifier>();
 builder.Services.AddSingleton<NotificationSignal>();
 builder.Services.AddSingleton<AppLinks>();
 builder.Services.AddSingleton<ReminderWorkerStatus>();
+builder.Services.AddSingleton<MailboxStatus>();
+builder.Services.AddSingleton<MailHtmlSanitizer>();
 builder.Services.AddSingleton(TimeProvider.System);
 
 // app.db (dbcontext.md). Data Source er relativ i appsettings og gøres absolut ud fra ContentRootPath.
@@ -193,6 +198,7 @@ builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddScoped<IAccountRecoveryManager, AccountRecoveryManager>();
 builder.Services.AddScoped<IReminderManager, ReminderManager>();
 builder.Services.AddScoped<IDashboardManager, DashboardManager>();
+builder.Services.AddScoped<IMailboxManager, MailboxManager>();
 
 // Eksterne services
 // Push (light pattern med biblioteket Lib.Net.Http.WebPush). Adressen er abonnementets, så klienten har ingen BaseAddress.
@@ -205,6 +211,7 @@ builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddHostedService<LogCleanupWorker>();
 builder.Services.AddHostedService<NotificationWorker>();
 builder.Services.AddHostedService<ReminderWorker>();
+builder.Services.AddHostedService<MailboxPollWorker>();
 
 var app = builder.Build();
 

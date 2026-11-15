@@ -22,6 +22,12 @@ public static class DashboardViewModelMapper
             MessagesSentLast7Days = dto.Notifications.SentSince,
             IncompleteProfileCount = dto.IncompleteProfileCount,
             ActiveUserCount = dto.ActiveUserCount,
+            MailboxUnreadText = !dto.Mailbox.IsConfigured ? "–" : dto.Mailbox.Error is not null ? "!" : dto.Mailbox.UnreadCount?.ToString() ?? "…",
+            MailboxSubText = !dto.Mailbox.IsConfigured ? "Webmail er ikke sat op"
+                : dto.Mailbox.Error is not null ? "Postkassen kunne ikke nås"
+                : dto.Mailbox.UnreadCount is null ? "Ikke tjekket endnu"
+                : $"i Indbakke · tjekket {dto.Mailbox.CheckedAt?.ToDanishRelativeText(dto.NowUtc).ToLowerInvariant()}",
+            MailboxHasUnread = dto.Mailbox.UnreadCount > 0,
             UpcomingEvents = dto.UpcomingEvents.Select(ToEvent).ToList(),
             EventsWithDrafts = dto.EventsWithDrafts.Select(ToEvent).ToList(),
             Activity = dto.Activity.Select(x => ToActivity(x, dto.NowUtc)).ToList(),

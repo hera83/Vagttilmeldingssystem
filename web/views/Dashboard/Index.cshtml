@@ -43,6 +43,13 @@
                 <span class="kpi-sub">de seneste 7 dage</span>
             </span>
         </div>
+        <a class="card kpi @(Model.MailboxHasUnread ? "kpi-attention" : "")" asp-controller="Mailbox" asp-action="Index">
+            <span class="kpi-main">
+                <span class="kpi-label"><icon name="inbox" />Ulæste beskeder</span>
+                <strong class="kpi-value">@Model.MailboxUnreadText</strong>
+                <span class="kpi-sub">@Model.MailboxSubText</span>
+            </span>
+        </a>
         <a class="card kpi" asp-controller="Users" asp-action="Index">
             <span class="kpi-main">
                 <span class="kpi-label"><icon name="user" />Mangler profil</span>

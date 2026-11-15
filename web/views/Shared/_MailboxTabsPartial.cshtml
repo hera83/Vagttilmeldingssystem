@@ -1,0 +1,7 @@
+@model string
+@* Fanerne Indbakke, Sendt og Papirkurv. Modellen er den aktuelle mappe ("inbox", "sent" eller "trash"). *@
+<nav class="tabs" aria-label="Mapper">
+    <a asp-controller="Mailbox" asp-action="Index" asp-route-folder="inbox" aria-current="@(Model == "inbox" ? "page" : null)"><icon name="inbox" />Indbakke</a>
+    <a asp-controller="Mailbox" asp-action="Index" asp-route-folder="sent" aria-current="@(Model == "sent" ? "page" : null)"><icon name="send" />Sendt</a>
+    <a asp-controller="Mailbox" asp-action="Index" asp-route-folder="trash" aria-current="@(Model == "trash" ? "page" : null)"><icon name="trash" />Papirkurv</a>
+</nav>

@@ -1,0 +1,41 @@
+@model web.ViewModels.Mailbox.ReplyMailboxViewModel
+@{
+    ViewData["Title"] = "Svar";
+    var id = ViewContext.RouteData.Values["id"];
+}
+<a class="back-link" asp-action="Read" asp-route-id="@id" asp-route-folder="@Model.Folder"><icon name="arrow-left" />Tilbage til mailen</a>
+<div class="page-header">
+    <div>
+        <h1>Svar</h1>
+        <p>Svaret sendes fra systemets postkasse og bliver i samme tråd hos modtageren.</p>
+    </div>
+</div>
+
+<div class="card form form-wide">
+    <form asp-action="Reply" asp-route-id="@id" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+        <input asp-for="Folder" type="hidden" />
+
+        <div class="field">
+            <label for="ReplyTo">Til</label>
+            <input id="ReplyTo" type="text" value="@Model.ToText" readonly />
+        </div>
+
+        <div class="field">
+            <label asp-for="Subject" class="required"></label>
+            <input asp-for="Subject" />
+            <span asp-validation-for="Subject"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Body" class="required"></label>
+            <textarea asp-for="Body" rows="16" class="mail-body"></textarea>
+            <span asp-validation-for="Body"></span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><icon name="send" />Send svar</button>
+            <a class="btn btn-ghost" asp-action="Read" asp-route-id="@id" asp-route-folder="@Model.Folder">Annuller</a>
+        </div>
+    </form>
+</div>

@@ -20,6 +20,7 @@ public class DashboardDto
     public List<DashboardActivityDto> Activity { get; set; } = [];
     public NotificationStatsDto Notifications { get; set; } = new();
     public ReminderWorkerSnapshot Reminders { get; set; } = new();
+    public MailboxSnapshot Mailbox { get; set; } = new();
     public bool PushConfigured { get; set; }
     public bool MailConfigured { get; set; }
 }

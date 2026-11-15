@@ -16,6 +16,11 @@ public class IndexDashboardViewModel
     public int IncompleteProfileCount { get; set; }
     public int ActiveUserCount { get; set; }
 
+    /// <summary>Ulæste i systemets postkasse som tekst ("3", "–" eller "!") og forklaringen under.</summary>
+    public string MailboxUnreadText { get; set; } = "–";
+    public string MailboxSubText { get; set; } = string.Empty;
+    public bool MailboxHasUnread { get; set; }
+
     public List<DashboardEventViewModel> UpcomingEvents { get; set; } = [];
     public List<DashboardEventViewModel> EventsWithDrafts { get; set; } = [];
     public List<DashboardActivityViewModel> Activity { get; set; } = [];
