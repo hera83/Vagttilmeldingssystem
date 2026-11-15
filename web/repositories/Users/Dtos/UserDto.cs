@@ -1,0 +1,13 @@
+namespace web.Repositories.Users.Dtos;
+
+public class UserDto
+{
+    public Guid Id { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public Guid SecurityStamp { get; set; }
+    public bool IsAdmin { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+}

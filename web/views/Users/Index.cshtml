@@ -1,0 +1,78 @@
+@model web.ViewModels.Users.IndexUsersViewModel
+@{
+    ViewData["Title"] = "Brugere";
+}
+<div class="page-header">
+    <div>
+        <h1>Brugere</h1>
+        <p>Forældre og administratorer, der kan logge ind. Kun administratorer kan oprette brugere.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Create"><icon name="user-plus" />Opret bruger</a>
+    </div>
+</div>
+
+@if (Model.Users.Count == 0)
+{
+    <div class="card empty-state">
+        <icon name="users" />
+        <h2>Der er ingen brugere endnu</h2>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="table table-cards">
+            <thead>
+                <tr>
+                    <th scope="col">Navn</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Rolle</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Sidste login</th>
+                    <th scope="col"><span class="visually-hidden">Handlinger</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td class="cell-main"><strong>@user.DisplayName</strong>@if (user.IsCurrentUser){<span class="muted small"> (dig)</span>}</td>
+                        <td data-label="E-mail">@user.UserName</td>
+                        <td data-label="Rolle">
+                            @if (user.IsAdmin)
+                            {
+                                <span class="badge badge-info"><icon name="shield" />Administrator</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-neutral"><icon name="user" />Bruger</span>
+                            }
+                        </td>
+                        <td data-label="Status">
+                            @if (user.IsActive)
+                            {
+                                <span class="badge badge-success"><icon name="check" />Aktiv</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-draft"><icon name="lock" />Deaktiveret</span>
+                            }
+                        </td>
+                        <td data-label="Sidste login">@user.LastLoginText</td>
+                        <td class="actions">
+                            <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@user.Id"><icon name="edit" />Ret<span class="visually-hidden"> @user.DisplayName</span></a>
+                            <a class="btn btn-ghost btn-sm" asp-action="ResetPassword" asp-route-id="@user.Id"><icon name="key" />Ny adgangskode<span class="visually-hidden"> til @user.DisplayName</span></a>
+                            @if (!user.IsCurrentUser)
+                            {
+                                <form asp-action="Delete" asp-route-id="@user.Id" method="post" data-confirm="Vil du slette @user.DisplayName? Det kan ikke fortrydes.">
+                                    <button type="submit" class="btn btn-danger btn-sm"><icon name="trash" />Slet<span class="visually-hidden"> @user.DisplayName</span></button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

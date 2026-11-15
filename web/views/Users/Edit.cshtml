@@ -1,0 +1,36 @@
+@model web.ViewModels.Users.EditUsersViewModel
+@{
+    ViewData["Title"] = "Ret bruger";
+}
+<a class="back-link" asp-action="Index"><icon name="arrow-left" />Tilbage til brugere</a>
+<div class="page-header">
+    <div>
+        <h1>Ret bruger</h1>
+        <p>@Model.UserName</p>
+    </div>
+</div>
+
+<div class="card form">
+    <form asp-action="Edit" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div class="field">
+            <label asp-for="DisplayName" class="required"></label>
+            <input asp-for="DisplayName" autocomplete="off" />
+            <span asp-validation-for="DisplayName"></span>
+        </div>
+
+        <label class="checkbox"><input asp-for="IsAdmin" /> @Html.DisplayNameFor(m => m.IsAdmin)</label>
+        <label class="checkbox"><input asp-for="IsActive" /> @Html.DisplayNameFor(m => m.IsActive)</label>
+
+        @if (Model.IsCurrentUser)
+        {
+            <div class="alert alert-info"><icon name="info" /><p>Det er din egen konto. Du kan ikke deaktivere dig selv eller fjerne din egen admin-rettighed.</p></div>
+        }
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><icon name="check" />Gem</button>
+            <a class="btn btn-ghost" asp-action="Index">Annuller</a>
+        </div>
+    </form>
+</div>

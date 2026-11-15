@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Forside";
+    var isAdmin = User.IsInRole(UserClaimTypes.AdminRole);
+}
+<div class="page-header">
+    <div>
+        <h1>Velkommen, @User.FindFirst(UserClaimTypes.DisplayName)?.Value</h1>
+        <p>Her får du overblik over dine vagter og tilmeldinger.</p>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <section class="card" aria-labelledby="account-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="key" /></span>
+            <div>
+                <h2 id="account-title">Din konto</h2>
+                <p>Skift din adgangskode, så den kun er kendt af dig.</p>
+            </div>
+        </div>
+        <a class="btn btn-secondary" asp-controller="Account" asp-action="ChangePassword"><icon name="key" />Skift adgangskode</a>
+    </section>
+
+    @if (isAdmin)
+    {
+        <section class="card" aria-labelledby="admin-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="users" /></span>
+                <div>
+                    <h2 id="admin-title">Administration</h2>
+                    <p>Opret forældre og administratorer, og styr deres adgang.</p>
+                </div>
+            </div>
+            <a class="btn btn-primary" asp-controller="Users" asp-action="Index"><icon name="users" />Brugere</a>
+        </section>
+    }
+</div>

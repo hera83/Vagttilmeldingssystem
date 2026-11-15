@@ -1,0 +1,20 @@
+@model web.ViewModels.Home.StatusHomeViewModel
+@{
+    ViewData["Title"] = Model.StatusCode switch
+    {
+        404 => "Siden findes ikke",
+        400 => "Forespørgslen kunne ikke behandles",
+        429 => "For mange forsøg",
+        _ => "Fejl"
+    };
+}
+<div class="card empty-state">
+    <icon name="info" />
+    <h1>@ViewData["Title"]</h1>
+    <p>Statuskode @Model.StatusCode.</p>
+    @if (Model.StatusCode == 429)
+    {
+        <p>Vent et øjeblik, og prøv igen.</p>
+    }
+    <p><a class="btn btn-secondary" asp-controller="Home" asp-action="Index"><icon name="home" />Til forsiden</a></p>
+</div>

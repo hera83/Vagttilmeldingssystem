@@ -1,0 +1,14 @@
+@model web.ViewModels.Home.ErrorHomeViewModel
+@{
+    ViewData["Title"] = "Fejl";
+}
+<div class="card empty-state">
+    <icon name="alert-triangle" />
+    <h1>Der opstod en fejl</h1>
+    <p>Prøv igen om lidt. Kontakt administratoren, hvis fejlen bliver ved, og oplys fejl-id'et.</p>
+    @if (!string.IsNullOrEmpty(Model.RequestId))
+    {
+        <p>Fejl-id: <code>@Model.RequestId</code></p>
+    }
+    <p><a class="btn btn-secondary" asp-controller="Home" asp-action="Index"><icon name="home" />Til forsiden</a></p>
+</div>

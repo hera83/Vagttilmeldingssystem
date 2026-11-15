@@ -1,0 +1,77 @@
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isAdmin = isAuthenticated && User.IsInRole(UserClaimTypes.AdminRole);
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    string? Current(string name) => string.Equals(controller, name, StringComparison.OrdinalIgnoreCase) ? "page" : null;
+}
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – Vagttilmelding</title>
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(isAuthenticated ? "is-authenticated" : "is-anonymous")@(isAdmin ? " is-admin" : "")">
+    <partial name="_IconSprite" />
+    <a class="skip-link" href="#main">Spring til indhold</a>
+
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                <span class="brand-mark"><icon name="calendar" /></span>
+                <span>Vagttilmelding</span>
+            </a>
+            @if (isAuthenticated)
+            {
+                <nav class="topnav" aria-label="Hovedmenu">
+                    <a asp-controller="Home" asp-action="Index" aria-current="@Current("Home")"><icon name="home" />Forside</a>
+                </nav>
+                <div class="user-menu">
+                    <a class="user-chip" asp-controller="Account" asp-action="ChangePassword" title="Skift adgangskode">
+                        <icon name="user" /><span class="user-name">@User.FindFirst(UserClaimTypes.DisplayName)?.Value</span>
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="btn btn-ghost btn-sm"><icon name="log-out" /><span class="hide-sm">Log ud</span></button>
+                    </form>
+                </div>
+            }
+        </div>
+    </header>
+
+    <div class="shell">
+        @if (isAdmin)
+        {
+            <aside class="sidebar">
+                <p class="sidebar-title" id="admin-menu-title">Administration</p>
+                <nav aria-labelledby="admin-menu-title">
+                    <a asp-controller="Users" asp-action="Index" aria-current="@Current("Users")"><icon name="users" />Brugere</a>
+                </nav>
+            </aside>
+        }
+        <main id="main" class="main" tabindex="-1">
+            @if (TempData["Success"] is string success)
+            {
+                <div class="alert alert-success" role="status"><icon name="check-circle" /><span>@success</span></div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-error" role="alert"><icon name="alert-triangle" /><span>@error</span></div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    @if (isAuthenticated)
+    {
+        <nav class="bottomnav" aria-label="Menu">
+            <a asp-controller="Home" asp-action="Index" aria-current="@Current("Home")"><icon name="home" /><span>Forside</span></a>
+            <a asp-controller="Account" asp-action="ChangePassword" aria-current="@Current("Account")"><icon name="user" /><span>Konto</span></a>
+        </nav>
+    }
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

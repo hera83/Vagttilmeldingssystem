@@ -1,0 +1,80 @@
+@model web.ViewModels.Account.LoginAccountViewModel
+@{
+    ViewData["Title"] = "Log ind";
+}
+<section class="hero">
+    <div>
+        <h1>Digitalt vagttilmeldingssystem</h1>
+        <p class="lead">Nem og overskuelig tilmelding til vagter for forældre – og en effektiv løsning for klassens eller skolens administratorer.</p>
+        <ul class="check-list">
+            <li><icon name="check" />Til klasser, årgange og skoler</li>
+            <li><icon name="check" />Først-til-mølle tilmelding</li>
+            <li><icon name="check" />Virker på mobil og computer</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-icon"><icon name="lock" /></span>
+            <div>
+                <h2>Log ind</h2>
+                <p>Brug den e-mail, du er oprettet med.</p>
+            </div>
+        </div>
+        <form asp-action="Login" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly"></div>
+            <input asp-for="ReturnUrl" type="hidden" />
+
+            <div class="field">
+                <label asp-for="UserName"></label>
+                <input asp-for="UserName" type="email" autocomplete="username" />
+                <span asp-validation-for="UserName"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" autocomplete="current-password" />
+                <span asp-validation-for="Password"></span>
+            </div>
+
+            <label class="checkbox"><input asp-for="RememberMe" /> @Html.DisplayNameFor(m => m.RememberMe)</label>
+
+            <button type="submit" class="btn btn-primary btn-block"><icon name="user" />Log ind</button>
+        </form>
+        <p class="muted small mt-1">Har du ikke en bruger? Kontakt klassens administrator, så bliver du oprettet.</p>
+    </div>
+</section>
+
+<section aria-labelledby="features-title">
+    <h2 id="features-title" class="visually-hidden">Det kan systemet</h2>
+    <div class="feature-grid">
+        <div class="card feature">
+            <span class="card-icon"><icon name="calendar" /></span>
+            <div>
+                <h3>Begivenheder og vagter</h3>
+                <p>Administratoren opretter fx skolefest eller arbejdslørdag og de vagter, der skal dækkes.</p>
+            </div>
+        </div>
+        <div class="card feature">
+            <span class="card-icon"><icon name="users" /></span>
+            <div>
+                <h3>Først-til-mølle</h3>
+                <p>Når der åbnes for tilmelding, kan forældrene vælge flere vagter og tilmelde sig samlet.</p>
+            </div>
+        </div>
+        <div class="card feature">
+            <span class="card-icon"><icon name="list" /></span>
+            <div>
+                <h3>Personlig kalender</h3>
+                <p>Se dine egne vagter, også dem administratoren har tildelt dig.</p>
+            </div>
+        </div>
+        <div class="card feature">
+            <span class="card-icon"><icon name="bell" /></span>
+            <div>
+                <h3>Påmindelser</h3>
+                <p>Få besked 48 og 24 timer før din vagt, så intet bliver glemt.</p>
+            </div>
+        </div>
+    </div>
+</section>
