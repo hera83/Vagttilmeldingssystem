@@ -16,6 +16,7 @@ public class NotificationDto
     public int Attempts { get; set; }
     public DateTime NextAttemptAt { get; set; }
     public DateTime? SentAt { get; set; }
+    public Guid? AssignmentId { get; set; }
     public string? LastError { get; set; }
     public DateTime CreatedAt { get; set; }
 }

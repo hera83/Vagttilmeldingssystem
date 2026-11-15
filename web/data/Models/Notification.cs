@@ -22,5 +22,8 @@ public class Notification : EntityBase
     public int Attempts { get; set; }
     public DateTime NextAttemptAt { get; set; }
     public DateTime? SentAt { get; set; }
+
+    /// <summary>Tildelingen, en påmindelse handler om. Er den afmeldt, når beskeden skal sendes, springes den over.</summary>
+    public Guid? AssignmentId { get; set; }
     public string? LastError { get; set; }
 }

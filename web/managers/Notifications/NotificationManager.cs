@@ -2,6 +2,7 @@ using web.Data.Models;
 using web.Infrastructure.Notifications;
 using web.Managers.Notifications.Dtos;
 using web.Managers.Notifications.Interfaces;
+using web.Repositories.Assignments.Interfaces;
 using web.Repositories.Notifications.Dtos;
 using web.Repositories.Notifications.Interfaces;
 using web.Repositories.PushSubscriptions.Dtos;
@@ -24,6 +25,7 @@ namespace web.Managers.Notifications;
 /// </summary>
 public class NotificationManager(
     IShiftRepository shiftRepository,
+    IAssignmentRepository assignmentRepository,
     INotificationRepository notificationRepository,
     IPushSubscriptionRepository pushSubscriptionRepository,
     IPushService pushService,
@@ -175,6 +177,12 @@ public class NotificationManager(
         var due = await notificationRepository.GetDueAsync(timeProvider.GetUtcNow().UtcDateTime, BatchSize, cancellationToken);
         foreach (var notification in due)
         {
+            if (await IsOutdatedReminderAsync(notification, cancellationToken))
+            {
+                await notificationRepository.MarkSkippedAsync(notification.Id, "Påmindelsen er forældet: tildelingen er afmeldt, eller vagten er startet.", cancellationToken);
+                continue;
+            }
+
             switch (notification.Channel)
             {
                 case NotificationChannel.Push:
@@ -301,6 +309,18 @@ public class NotificationManager(
                 await notificationRepository.ClearContentAsync(notification.Id, cancellationToken);
             }
         }
+    }
+
+    /// <summary>En påmindelse, hvis tildeling er afmeldt (eller brugeren deaktiveret), eller hvis vagten er startet, sendes ikke.</summary>
+    private async Task<bool> IsOutdatedReminderAsync(NotificationDto notification, CancellationToken cancellationToken)
+    {
+        if (!NotificationKinds.IsReminder(notification.Kind) || notification.AssignmentId is null)
+        {
+            return false;
+        }
+
+        var assignment = await assignmentRepository.GetActiveUpcomingByIdAsync(notification.AssignmentId.Value, cancellationToken);
+        return assignment is null || assignment.StartUtc <= timeProvider.GetUtcNow().UtcDateTime;
     }
 
     /// <summary>Afslutter en besked. Indeholder den et engangslink, tømmes teksten, så linket ikke ligger i databasen.</summary>

@@ -42,6 +42,7 @@ public class WebAppFactory : WebApplicationFactory<Program>
         builder.UseSetting("Users:InitialAdmin:Password", AdminPassword);
         // NotificationWorker kører ikke i testene, så de selv kan styre køen via INotificationManager (se NotificationWorkerTests).
         builder.UseSetting("Notifications:WorkerEnabled", "false");
+        builder.UseSetting("Reminders:Enabled", "false");
         builder.UseSetting("App:BaseUrl", BaseUrl);
         builder.ConfigureTestServices(services =>
         {

@@ -22,4 +22,13 @@ public interface IAssignmentRepository
 
     /// <summary>Har brugeren nogen tildelinger (også afmeldte)? Så kan brugeren ikke slettes.</summary>
     Task<bool> AnyForUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Aktive tildelinger hos aktive brugere, hvor vagten starter i intervallet (fromUtc, toUtc]. Også tildelte kladder,
+    /// fordi brugeren kan se dem i sin kalender. Bruges til påmindelser.
+    /// </summary>
+    Task<List<UpcomingAssignmentDto>> GetActiveStartingBetweenAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Én aktiv tildeling hos en aktiv bruger med vagtens tidspunkt, eller null (afmeldt, slettet eller deaktiveret bruger).</summary>
+    Task<UpcomingAssignmentDto?> GetActiveUpcomingByIdAsync(Guid assignmentId, CancellationToken cancellationToken = default);
 }

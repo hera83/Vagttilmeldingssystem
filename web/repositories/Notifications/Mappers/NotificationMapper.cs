@@ -20,6 +20,7 @@ public static class NotificationMapper
         Attempts = x.Attempts,
         NextAttemptAt = x.NextAttemptAt,
         SentAt = x.SentAt,
+        AssignmentId = x.AssignmentId,
         LastError = x.LastError,
         CreatedAt = x.CreatedAt
     };
@@ -37,6 +38,7 @@ public static class NotificationMapper
         Body = dto.Body,
         Url = dto.Url,
         DedupKey = dto.DedupKey,
+        AssignmentId = dto.AssignmentId,
         Status = NotificationStatus.Pending,
         NextAttemptAt = dto.NotBeforeUtc
     };

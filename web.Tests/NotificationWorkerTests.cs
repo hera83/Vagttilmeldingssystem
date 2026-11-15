@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using web.Infrastructure.Notifications;
 using web.Repositories.PushSubscriptions.Dtos;
 using web.Repositories.PushSubscriptions.Interfaces;
 using web.Tests.Infrastructure;
@@ -40,5 +41,26 @@ public class NotificationWorkerTests : IClassFixture<WorkerWebAppFactory>
 
         var message = Assert.Single(_factory.Push.DeliveredTo(endpoint));
         Assert.Contains(ev.Name, message.Body);
+    }
+
+    [Fact]
+    public async Task ReminderWorker_ScannerVedOpstart_OgViserStatus()
+    {
+        _ = _factory.Server; // starter appen og dens workers
+        var status = _factory.Services.GetRequiredService<ReminderWorkerStatus>();
+
+        var watch = Stopwatch.StartNew();
+        while (status.Current.RunCount == 0 && watch.Elapsed < TimeSpan.FromSeconds(10))
+        {
+            await Task.Delay(100);
+        }
+
+        var current = status.Current;
+        Assert.True(current.Enabled);
+        Assert.Equal(TimeSpan.FromHours(1), current.Interval);
+        Assert.True(current.RunCount >= 1);
+        Assert.NotNull(current.LastRunCompletedAt);
+        Assert.Null(current.LastError);
+        Assert.Equal(current.LastRunStartedAt!.Value.AddHours(1), current.NextRunAt);
     }
 }

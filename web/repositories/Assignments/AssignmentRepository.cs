@@ -140,6 +140,31 @@ public class AssignmentRepository(WebDbContext dbContext) : IAssignmentRepositor
     public Task<bool> AnyForUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
         dbContext.Assignments.AnyAsync(x => x.UserId == userId, cancellationToken);
 
+    public Task<List<UpcomingAssignmentDto>> GetActiveStartingBetweenAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default) =>
+        Upcoming().Where(x => x.StartUtc > fromUtc && x.StartUtc <= toUtc).OrderBy(x => x.StartUtc).ToListAsync(cancellationToken);
+
+    public Task<UpcomingAssignmentDto?> GetActiveUpcomingByIdAsync(Guid assignmentId, CancellationToken cancellationToken = default) =>
+        Upcoming().Where(x => x.AssignmentId == assignmentId).FirstOrDefaultAsync(cancellationToken);
+
+    private IQueryable<UpcomingAssignmentDto> Upcoming() =>
+        from a in dbContext.Assignments.AsNoTracking()
+        join s in dbContext.Shifts on a.ShiftId equals s.Id
+        join e in dbContext.Events on s.EventId equals e.Id
+        join u in dbContext.Users on a.UserId equals u.Id
+        where a.IsActive && u.IsActive
+        select new UpcomingAssignmentDto
+        {
+            AssignmentId = a.Id,
+            UserId = a.UserId,
+            ShiftId = s.Id,
+            Title = s.Title,
+            StartUtc = s.StartUtc,
+            EndUtc = s.EndUtc,
+            EventName = e.Name,
+            EventLocation = e.Location,
+            AssignedAt = a.CreatedAt
+        };
+
     // Kun brugerens egne aktive tildelinger. Kladder er med, fordi brugeren må se sine egne tildelte vagter (krav K09/K11).
     private IQueryable<MyShiftDto> MyShifts(Guid userId) =>
         from a in dbContext.Assignments.AsNoTracking()

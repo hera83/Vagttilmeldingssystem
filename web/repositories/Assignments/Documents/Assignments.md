@@ -15,6 +15,8 @@
 | `GetActiveCountsAsync(IEnumerable<Guid> shiftIds)` | Antal aktive tildelinger pr. vagt (vagter uden tildelinger er ikke med). |
 | `GetActiveForUserAsync(Guid userId)` | Brugerens egne aktive vagter med begivenhedens navn og sted, sorteret efter starttid. Indeholder også tildelte kladder. |
 | `GetActiveForUserAndShiftAsync(Guid userId, Guid shiftId)` | Én af brugerens egne vagter, eller `null` (også hvis vagten findes, men ikke er brugerens). |
+| `GetActiveStartingBetweenAsync(DateTime fromUtc, DateTime toUtc)` | Aktive tildelinger hos aktive brugere, hvor vagten starter efter `fromUtc` og senest `toUtc` (også tildelte kladder). Bruges af `ReminderManager`. |
+| `GetActiveUpcomingByIdAsync(Guid assignmentId)` | Én aktiv tildeling med vagtens tidspunkt, eller `null` (afmeldt, slettet eller bruger deaktiveret). Bruges til at springe forældede påmindelser over ved afsendelse. |
 | `AnyForUserAsync(Guid userId)` | Har brugeren tildelinger (også afmeldte)? Så kan brugeren ikke slettes. |
 
 ## Transaktionsgrænse (vigtigt)

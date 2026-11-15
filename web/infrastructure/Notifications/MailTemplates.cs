@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using web.Extensions;
 using System.Text.RegularExpressions;
 
 namespace web.Infrastructure.Notifications;
@@ -58,6 +59,42 @@ public static partial class MailTemplates
 
         return new MailText($"Nye vagter er åbne: {eventName}", body);
     }
+
+    /// <summary>"i dag", "i morgen" eller "om N dage" ud fra datoerne i dansk tid (også hen over skift til/fra sommertid).</summary>
+    public static string DayPhrase(DateTime nowUtc, DateTime startUtc)
+    {
+        var days = DateOnly.FromDateTime(startUtc.ToDanishTime()).DayNumber - DateOnly.FromDateTime(nowUtc.ToDanishTime()).DayNumber;
+        return days <= 0 ? "i dag" : days == 1 ? "i morgen" : $"om {days} dage";
+    }
+
+    /// <summary>Første linje i en påmindelse, som i projektbeskrivelsen: "Du har en vagt om 2 dage: [dato] kl. [tid]" og "Husk din vagt i morgen kl. [tid]".</summary>
+    public static string ReminderLead(string kind, DateTime startUtc, DateTime nowUtc)
+    {
+        var phrase = DayPhrase(nowUtc, startUtc);
+        return kind == NotificationKinds.Reminder48
+            ? $"Du har en vagt {phrase}: {startUtc.ToDanishDateText()} kl. {startUtc.ToDanishTimeText()}."
+            : $"Husk din vagt {phrase} kl. {startUtc.ToDanishTimeText()}.";
+    }
+
+    public static MailText Reminder(string kind, MailShiftLine shift, DateTime startUtc, DateTime nowUtc, string? link)
+    {
+        var phrase = DayPhrase(nowUtc, startUtc);
+        var body = $"{ReminderLead(kind, startUtc, nowUtc)}\n\n• {shift.Title} – {shift.EventName}\n  {shift.When}\n  {shift.Location}\n\n" +
+                   "Vagterne er låst. Kan du alligevel ikke, så kontakt administratoren.";
+        if (link is not null)
+        {
+            body += $"\n\nSe vagten:\n{link}";
+        }
+
+        return new MailText(
+            kind == NotificationKinds.Reminder48 ? $"Påmindelse: du har en vagt {phrase}" : $"Påmindelse: husk din vagt {phrase}",
+            body);
+    }
+
+    /// <summary>Kort tekst til push: første linje + vagten. Kun brugerens egen vagt.</summary>
+    public static MailText ReminderPush(string kind, MailShiftLine shift, DateTime startUtc, DateTime nowUtc) => new(
+        $"Påmindelse: {shift.Title}",
+        $"{ReminderLead(kind, startUtc, nowUtc)} {shift.EventName}, {shift.Location}.");
 
     /// <summary>Hilsen og afslutning omkring brødteksten.</summary>
     public static string Wrap(string displayName, string body) =>

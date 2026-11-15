@@ -12,6 +12,9 @@ public class CreateNotificationDto
     public string Url { get; set; } = string.Empty;
     public string DedupKey { get; set; } = string.Empty;
 
+    /// <summary>Kun påmindelser: tildelingen, beskeden handler om.</summary>
+    public Guid? AssignmentId { get; set; }
+
     /// <summary>Tidligste afsendelse (UTC).</summary>
     public DateTime NotBeforeUtc { get; set; }
 }
