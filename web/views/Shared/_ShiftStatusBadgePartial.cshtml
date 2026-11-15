@@ -1,0 +1,10 @@
+@model bool
+@* Model = vagten er åben. Status vises altid med både ikon og tekst, aldrig kun farve. *@
+@if (Model)
+{
+    <span class="badge badge-open"><icon name="users" />Åben for tilmelding</span>
+}
+else
+{
+    <span class="badge badge-draft"><icon name="eye-off" />Skjult – kladde</span>
+}

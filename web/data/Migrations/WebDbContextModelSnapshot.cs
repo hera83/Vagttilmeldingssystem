@@ -127,6 +127,65 @@ namespace web.data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("web.Data.Models.Shift", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("OpenedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OpenedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId", "StartUtc");
+
+                    b.HasIndex("Status", "StartUtc");
+
+                    b.ToTable("Shifts", t =>
+                        {
+                            t.HasCheckConstraint("CK_Shifts_Capacity", "\"Capacity\" BETWEEN 1 AND 500");
+
+                            t.HasCheckConstraint("CK_Shifts_Period", "\"EndUtc\" > \"StartUtc\"");
+                        });
+                });
+
             modelBuilder.Entity("web.Data.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -181,6 +240,15 @@ namespace web.data.Migrations
                         .WithOne()
                         .HasForeignKey("web.Data.Models.Profile", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("web.Data.Models.Shift", b =>
+                {
+                    b.HasOne("web.Data.Models.Event", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

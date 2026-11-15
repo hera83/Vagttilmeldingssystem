@@ -1,13 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using web.Data.Models;
 using web.Infrastructure.Authentication;
+using web.Managers.Planning.Dtos;
+using web.Managers.Planning.Interfaces;
 using web.Repositories.Events.Interfaces;
 using web.ViewModels.Events;
 
 namespace web.Controllers;
 
+/// <summary>
+/// Begivenheder (admin). Actions med kun begivenheden bruger repositoriet direkte. Details og Delete går via
+/// PlanningManager, fordi de også bruger vagterne (hybrid-reglen pr. action).
+/// </summary>
 [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
-public class EventsController(IEventRepository eventRepository) : Controller
+public class EventsController(IEventRepository eventRepository, IPlanningManager planningManager) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(string? q, bool archived, CancellationToken cancellationToken)
@@ -18,15 +25,15 @@ public class EventsController(IEventRepository eventRepository) : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Details(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Details(Guid id, ShiftStatus? status, CancellationToken cancellationToken)
     {
-        var item = await eventRepository.GetByIdAsync(id, cancellationToken);
-        if (item is null)
+        var overview = await planningManager.GetEventOverviewAsync(id, status, cancellationToken);
+        if (overview is null)
         {
             return NotFound();
         }
 
-        return View(item.ToDetailsEventsViewModel());
+        return View(overview.ToDetailsEventsViewModel(status));
     }
 
     [HttpGet]
@@ -103,9 +110,16 @@ public class EventsController(IEventRepository eventRepository) : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        if (!await eventRepository.DeleteAsync(id, cancellationToken))
+        var result = await planningManager.DeleteEventAsync(id, cancellationToken);
+        if (result == PlanningResult.EventNotFound)
         {
             return NotFound();
+        }
+
+        if (result == PlanningResult.EventHasShifts)
+        {
+            TempData["Error"] = "Begivenheden har vagter og kan ikke slettes. Slet vagterne først, eller arkivér begivenheden i stedet.";
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         TempData["Success"] = "Begivenheden er slettet.";

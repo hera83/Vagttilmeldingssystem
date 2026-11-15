@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using web.Data.Models;
 using web.Extensions;
+using web.Managers.Planning.Dtos;
 using web.Repositories.Events.Dtos;
 
 namespace web.ViewModels.Events;
@@ -28,14 +30,26 @@ public static class EventsViewModelMapper
         ArchivedCount = counts.Archived
     };
 
-    public static DetailsEventsViewModel ToDetailsEventsViewModel(this EventDto item) => new()
+    public static DetailsEventsViewModel ToDetailsEventsViewModel(this EventOverviewDto overview, ShiftStatus? statusFilter) => new()
     {
-        Id = item.Id,
-        Name = item.Name,
-        Description = item.Description,
-        Location = item.Location,
-        PeriodText = DateTimeExtensions.ToDanishPeriodText(item.StartDate, item.EndDate),
-        IsArchived = item.IsArchived
+        Id = overview.Event.Id,
+        Name = overview.Event.Name,
+        Description = overview.Event.Description,
+        Location = overview.Event.Location,
+        PeriodText = DateTimeExtensions.ToDanishPeriodText(overview.Event.StartDate, overview.Event.EndDate),
+        IsArchived = overview.Event.IsArchived,
+        Shifts = overview.Shifts.Select(x => new ShiftRowViewModel
+        {
+            Id = x.Id,
+            Title = x.Title,
+            DateText = x.StartUtc.ToDanishDateText(),
+            TimeText = DateTimeExtensions.ToDanishTimeRangeText(x.StartUtc, x.EndUtc),
+            Capacity = x.Capacity,
+            IsOpen = x.Status == ShiftStatus.Open
+        }).ToList(),
+        DraftCount = overview.DraftCount,
+        OpenCount = overview.OpenCount,
+        StatusFilter = statusFilter?.ToString()
     };
 
     public static CreateEventDto ToCreateEventDto(this CreateEventsViewModel model) => new()

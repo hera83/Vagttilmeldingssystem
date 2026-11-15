@@ -344,3 +344,9 @@ table.table { width: 100%; border-collapse: collapse; }
     .item-row { padding: .75rem; gap: .7rem; }
     .item-row .card-icon { display: none; }
 }
+
+/* ---------- Sektioner ---------- */
+.section { margin-bottom: 1.5rem; }
+.section-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+.section-header h2 { margin: 0; }
+.tabs-spaced { margin-bottom: .9rem; }

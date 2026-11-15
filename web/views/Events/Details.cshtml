@@ -35,11 +35,75 @@
     </div>
 </div>
 
-<section class="card" aria-labelledby="details-title">
+<section class="section" aria-labelledby="shifts-title">
+    <div class="section-header">
+        <h2 id="shifts-title">Vagter <span class="muted">(@Model.TotalCount)</span></h2>
+        <a class="btn btn-primary" asp-controller="Shifts" asp-action="Create" asp-route-eventId="@Model.Id"><icon name="plus" />Opret vagt</a>
+    </div>
+
+    @if (Model.TotalCount == 0)
+    {
+        <div class="card empty-state">
+            <icon name="list" />
+            <h3>Der er ingen vagter endnu</h3>
+            <p>Opret vagterne, fx "Kiosk 17:00–19:00" eller "Oprydning 21:00–22:30". Nye vagter er skjulte kladder, indtil du åbner for tilmelding.</p>
+        </div>
+    }
+    else
+    {
+        <nav class="tabs tabs-spaced" aria-label="Filtrér vagter efter status">
+            <a asp-action="Details" asp-route-id="@Model.Id" aria-current="@(Model.StatusFilter is null ? "page" : null)">Alle <span class="count">@Model.TotalCount</span></a>
+            <a asp-action="Details" asp-route-id="@Model.Id" asp-route-status="Draft" aria-current="@(Model.StatusFilter == "Draft" ? "page" : null)">Kladder <span class="count">@Model.DraftCount</span></a>
+            <a asp-action="Details" asp-route-id="@Model.Id" asp-route-status="Open" aria-current="@(Model.StatusFilter == "Open" ? "page" : null)">Åbne <span class="count">@Model.OpenCount</span></a>
+        </nav>
+
+        @if (Model.Shifts.Count == 0)
+        {
+            <div class="card empty-state"><h3>Ingen vagter med den status</h3></div>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="table table-cards">
+                    <thead>
+                        <tr>
+                            <th scope="col">Vagt</th>
+                            <th scope="col">Dato</th>
+                            <th scope="col">Tid</th>
+                            <th scope="col" class="num">Pladser</th>
+                            <th scope="col">Status</th>
+                            <th scope="col"><span class="visually-hidden">Handlinger</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var shift in Model.Shifts)
+                        {
+                            <tr>
+                                <td class="cell-main"><strong>@shift.Title</strong></td>
+                                <td data-label="Dato" class="nowrap">@shift.DateText</td>
+                                <td data-label="Tid" class="nowrap">@shift.TimeText</td>
+                                <td data-label="Pladser" class="num">@shift.Capacity</td>
+                                <td data-label="Status"><partial name="_ShiftStatusBadgePartial" model="shift.IsOpen" /></td>
+                                <td class="actions">
+                                    <a class="btn btn-ghost btn-sm" asp-controller="Shifts" asp-action="Edit" asp-route-id="@shift.Id" title="Ret"><icon name="edit" /><span class="btn-label">Ret</span><span class="visually-hidden"> @shift.Title</span></a>
+                                    <form asp-controller="Shifts" asp-action="Delete" asp-route-id="@shift.Id" method="post" data-confirm="Vil du slette vagten @shift.Title? Det kan ikke fortrydes.">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Slet"><icon name="trash" /><span class="btn-label">Slet</span><span class="visually-hidden"> @shift.Title</span></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</section>
+
+<section class="card mt-2" aria-labelledby="details-title">
     <div class="card-header">
         <span class="card-icon"><icon name="info" /></span>
         <div>
-            <h2 id="details-title">Detaljer</h2>
+            <h2 id="details-title">Om begivenheden</h2>
         </div>
     </div>
     <dl class="details">

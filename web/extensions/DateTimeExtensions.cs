@@ -54,6 +54,15 @@ public static class DateTimeExtensions
     public static string ToDanishTimeText(this DateTime utc) =>
         utc.ToDanishTime().ToString("HH':'mm", Danish);
 
+    /// <summary>Fx "17:00 – 19:00", eller "22:00 – 01:00 (næste dag)", hvis vagten slutter efter midnat.</summary>
+    public static string ToDanishTimeRangeText(DateTime startUtc, DateTime endUtc)
+    {
+        var start = startUtc.ToDanishTime();
+        var end = endUtc.ToDanishTime();
+        var text = $"{start.ToString("HH':'mm", Danish)} – {end.ToString("HH':'mm", Danish)}";
+        return end.Date > start.Date ? $"{text} (næste dag)" : text;
+    }
+
     /// <summary>Fx "fre. 14. mar. 2025".</summary>
     public static string ToDanishDateText(this DateOnly date) =>
         date.ToString("ddd d. MMM yyyy", Danish);

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,15 +18,24 @@ using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
 using web.Managers.Members;
 using web.Managers.Members.Interfaces;
+using web.Managers.Planning;
+using web.Managers.Planning.Interfaces;
 using web.Repositories.Events;
 using web.Repositories.Events.Interfaces;
 using web.Repositories.Logs;
 using web.Repositories.Logs.Interfaces;
 using web.Repositories.Profiles;
 using web.Repositories.Profiles.Interfaces;
+using web.Repositories.Shifts;
+using web.Repositories.Shifts.Interfaces;
 using web.Repositories.Users;
 using web.Repositories.Users.Dtos;
 using web.Repositories.Users.Interfaces;
+
+// Formularer fra <input type="date|time|number"> sender altid invariant format (2026-05-16, 17:00), uanset serverens sprog.
+// Al visning bruger DateTimeExtensions.Danish eksplicit (projektets afvigelse, se web/.claude/CLAUDE.md).
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -121,9 +131,11 @@ builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 
 // Managers
 builder.Services.AddScoped<IMemberManager, MemberManager>();
+builder.Services.AddScoped<IPlanningManager, PlanningManager>();
 
 // Eksterne services
 

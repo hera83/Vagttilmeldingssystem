@@ -1,0 +1,39 @@
+@model web.ViewModels.Shifts.ShiftFormViewModel
+@* Fælles felter til Opret vagt og Ret vagt. *@
+<div asp-validation-summary="ModelOnly"></div>
+
+<div class="field">
+    <label asp-for="Title" class="required"></label>
+    <input asp-for="Title" placeholder="Fx Kiosk eller Oprydning" />
+    <span asp-validation-for="Title"></span>
+</div>
+
+<div class="form-row">
+    <div class="field">
+        <label asp-for="Date" class="required"></label>
+        <input asp-for="Date" type="date" />
+        <span asp-validation-for="Date"></span>
+    </div>
+    <div class="field">
+        <label asp-for="StartTime" class="required"></label>
+        <input asp-for="StartTime" type="time" asp-format="{0:HH\:mm}" />
+        <span asp-validation-for="StartTime"></span>
+    </div>
+    <div class="field">
+        <label asp-for="EndTime" class="required"></label>
+        <input asp-for="EndTime" type="time" asp-format="{0:HH\:mm}" aria-describedby="EndTime-help" />
+        <span id="EndTime-help" class="help">Før starttiden = slutter efter midnat.</span>
+        <span asp-validation-for="EndTime"></span>
+    </div>
+    <div class="field">
+        <label asp-for="Capacity" class="required"></label>
+        <input asp-for="Capacity" type="number" min="1" max="500" step="1" inputmode="numeric" />
+        <span asp-validation-for="Capacity"></span>
+    </div>
+</div>
+
+<div class="field">
+    <label asp-for="Description"></label>
+    <textarea asp-for="Description" rows="3" placeholder="Fx mødested og hvad vagten går ud på"></textarea>
+    <span asp-validation-for="Description"></span>
+</div>

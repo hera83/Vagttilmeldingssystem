@@ -1,0 +1,41 @@
+@model web.ViewModels.Shifts.CreateShiftsViewModel
+@{
+    ViewData["Title"] = "Opret vagt";
+}
+<a class="back-link" asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId"><icon name="arrow-left" />Tilbage til @Model.EventName</a>
+<div class="page-header">
+    <div>
+        <h1>Opret vagt</h1>
+        <p>Angiv vagtens tidsrum og hvor mange personer, der kan tilmelde sig.</p>
+    </div>
+</div>
+
+<div class="grid grid-sidebar">
+    <section class="card" aria-labelledby="shift-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="calendar" /></span>
+            <div>
+                <h2 id="shift-title">Vagtoplysninger</h2>
+                <p>Begivenhed: <strong>@Model.EventName</strong> (@Model.EventPeriodText)</p>
+            </div>
+        </div>
+        <form asp-action="Create" asp-route-eventId="@Model.EventId" method="post" novalidate>
+            <partial name="_ShiftFieldsPartial" model="Model" />
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><icon name="check" />Gem som kladde</button>
+                <a class="btn btn-ghost" asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId">Annuller</a>
+            </div>
+        </form>
+    </section>
+
+    <aside class="card" aria-labelledby="status-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="eye-off" /></span>
+            <div>
+                <h2 id="status-title">Status</h2>
+                <p><partial name="_ShiftStatusBadgePartial" model="false" /></p>
+            </div>
+        </div>
+        <p>Nye vagter er altid skjulte kladder. Forældrene kan ikke se vagten eller få besked om den, før der åbnes for tilmelding på begivenhedens side.</p>
+    </aside>
+</div>
