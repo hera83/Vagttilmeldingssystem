@@ -21,6 +21,11 @@ public class HomeController(IEnrollmentManager enrollmentManager) : Controller
         return View(overview.ToIndexHomeViewModel(DateTime.UtcNow));
     }
 
+    // Installationsvejledningen er anonym, så den kan nås fra login-siden. Den viser ingen data.
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult Install() => View();
+
     [AllowAnonymous]
     [IgnoreAntiforgeryToken]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

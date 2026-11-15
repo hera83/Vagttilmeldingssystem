@@ -1,0 +1,22 @@
+@* Kort om PWA og installation (mockup 01: "Installér på din enhed"). Bruges på login-siden og forsiden. Skjules i den installerede app (pwa.js). *@
+<section class="card pwa-teaser" aria-labelledby="pwa-title" data-hide-when-installed>
+    <div class="pwa-teaser-intro">
+        <span class="card-icon card-icon-lg"><icon name="smartphone" /></span>
+        <div>
+            <h2 id="pwa-title">Også som app – på din mobil</h2>
+            <p>Vagttilmelding er en web-app (PWA), som kan installeres på mobil, tablet og computer. Du får hurtig adgang og en app-lignende oplevelse – uden at hente noget i App Store eller Google Play.</p>
+        </div>
+    </div>
+    <div class="pwa-teaser-steps">
+        <h3>Installér på din enhed</h3>
+        <ol class="steps">
+            <li><span>Åbn Vagttilmelding i din browser.</span></li>
+            <li><span>Vælg <strong>Installer app</strong> eller <strong>Føj til hjemmeskærm</strong>.</span></li>
+            <li><span>Så har du Vagttilmelding lige ved hånden.</span></li>
+        </ol>
+        <div class="form-actions mb-0">
+            <button type="button" class="btn btn-primary" data-install-button hidden><icon name="download" />Installér app</button>
+            <a class="btn btn-secondary" asp-controller="Home" asp-action="Install"><icon name="smartphone" />Se vejledningen</a>
+        </div>
+    </div>
+</section>

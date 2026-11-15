@@ -220,7 +220,7 @@ table.table { width: 100%; border-collapse: collapse; }
 /* ---------- Tom tilstand ---------- */
 .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); }
 .empty-state .icon { width: 2.5rem; height: 2.5rem; color: var(--primary); margin-bottom: .5rem; }
-.empty-state h2 { color: var(--text); }
+.empty-state h1, .empty-state h2 { color: var(--text); }
 
 /* ---------- Detaljeliste ---------- */
 .details { display: grid; grid-template-columns: max-content 1fr; gap: .45rem 1.25rem; margin: 0; }
@@ -450,3 +450,28 @@ table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; te
 
 /* ---------- Live-status ---------- */
 .live-status { position: sticky; top: calc(var(--topbar-height) + .5rem); z-index: 10; }
+
+/* PWA (step 09): installationsvejledning, offline-side og offline-tilstand */
+.steps { list-style: none; counter-reset: step; padding: 0; margin: .75rem 0 0; display: grid; gap: .6rem; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); gap: .65rem; align-items: start; }
+.steps li::before { content: counter(step); display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 700; font-size: .9rem; }
+.steps .icon { width: 1.05em; height: 1.05em; vertical-align: -.15em; color: var(--primary); }
+.pwa-teaser { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 1.5rem 2.5rem; background: var(--primary-soft); border-color: transparent; margin-top: 1.5rem; }
+.pwa-teaser-intro { display: flex; gap: 1rem; align-items: flex-start; }
+.pwa-teaser-intro h2 { margin-top: 0; }
+.pwa-teaser-intro p { margin-bottom: 0; color: var(--text-muted); }
+.pwa-teaser-steps { border-left: 1px solid var(--border); padding-left: 2rem; }
+.pwa-teaser-steps h3 { margin: 0; }
+.pwa-teaser .card-icon { background: var(--card); }
+.card-icon-lg { width: 3.4rem; height: 3.4rem; }
+.card-icon-lg .icon { width: 1.75rem; height: 1.75rem; }
+.install-guide .card.is-current { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft), var(--shadow); }
+.install-guide .card-header { align-items: center; }
+.install-guide .badge { margin-left: auto; }
+.offline-page img { margin-bottom: .5rem; }
+.offline-page p { max-width: 34rem; margin-left: auto; margin-right: auto; }
+.brand-mark img { display: block; width: 100%; height: 100%; }
+@media (max-width: 900px) {
+    .pwa-teaser { grid-template-columns: minmax(0, 1fr); }
+    .pwa-teaser-steps { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 1.25rem; }
+}

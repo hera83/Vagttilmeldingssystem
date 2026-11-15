@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Installér appen";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+@if (isAuthenticated)
+{
+    <a class="back-link" asp-controller="Home" asp-action="Index"><icon name="arrow-left" />Til forsiden</a>
+}
+else
+{
+    <a class="back-link" asp-controller="Account" asp-action="Login"><icon name="arrow-left" />Til log ind</a>
+}
+<div class="page-header">
+    <div>
+        <h1>Installér appen</h1>
+        <p>Vagttilmelding er en web-app (PWA). Læg den på hjemmeskærmen eller skrivebordet, så åbner den som en app – uden App Store og Google Play.</p>
+    </div>
+    <div class="page-actions">
+        <button type="button" class="btn btn-primary" data-install-button hidden><icon name="download" />Installér app</button>
+    </div>
+</div>
+
+<div class="alert alert-success" role="status" data-install-installed hidden>
+    <icon name="check-circle" />
+    <p><strong>Appen er installeret.</strong> Du bruger den lige nu.</p>
+</div>
+
+<div class="grid grid-3 install-guide">
+    <section class="card" data-platform="android" aria-labelledby="android-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="smartphone" /></span>
+            <div>
+                <h2 id="android-title">Android</h2>
+                <p>Chrome</p>
+            </div>
+            <span class="badge badge-open" data-platform-hint hidden>Din enhed</span>
+        </div>
+        <ol class="steps">
+            <li><span>Åbn Vagttilmelding i <strong>Chrome</strong>.</span></li>
+            <li><span>Tryk på menuen <icon name="more-vertical" /> (tre prikker) øverst til højre.</span></li>
+            <li><span>Vælg <strong>Installer app</strong> eller <strong>Føj til startskærm</strong>.</span></li>
+            <li><span>Tryk på <strong>Installer</strong>.</span></li>
+        </ol>
+    </section>
+
+    <section class="card" data-platform="ios" aria-labelledby="ios-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="smartphone" /></span>
+            <div>
+                <h2 id="ios-title">iPhone og iPad</h2>
+                <p>Safari</p>
+            </div>
+            <span class="badge badge-open" data-platform-hint hidden>Din enhed</span>
+        </div>
+        <ol class="steps">
+            <li><span>Åbn Vagttilmelding i <strong>Safari</strong>.</span></li>
+            <li><span>Tryk på <strong>Del</strong> <icon name="share" /> (nederst på iPhone, øverst på iPad).</span></li>
+            <li><span>Rul ned, og vælg <strong>Føj til hjemmeskærm</strong> <icon name="plus-square" />.</span></li>
+            <li><span>Tryk på <strong>Tilføj</strong>.</span></li>
+        </ol>
+    </section>
+
+    <section class="card" data-platform="desktop" aria-labelledby="desktop-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="monitor" /></span>
+            <div>
+                <h2 id="desktop-title">Computer</h2>
+                <p>Chrome eller Edge</p>
+            </div>
+            <span class="badge badge-open" data-platform-hint hidden>Din enhed</span>
+        </div>
+        <ol class="steps">
+            <li><span>Åbn Vagttilmelding i <strong>Chrome</strong> eller <strong>Edge</strong>.</span></li>
+            <li><span>Klik på installationsikonet i adresselinjen, eller find <strong>Installer</strong> i browserens menu.</span></li>
+            <li><span>Klik på <strong>Installer</strong>. Appen åbner i sit eget vindue.</span></li>
+        </ol>
+    </section>
+</div>
+
+<section class="card mt-1" aria-labelledby="offline-title">
+    <div class="card-header">
+        <span class="card-icon"><icon name="wifi-off" /></span>
+        <div>
+            <h2 id="offline-title">Uden internet</h2>
+            <p>Appen viser altid de nyeste vagter direkte fra serveren.</p>
+        </div>
+    </div>
+    <p class="mb-0">Uden internet kan du ikke se vagter eller tilmelde dig. Appen viser så en side om, at du er offline, og knappen <strong>Bekræft tilmelding</strong> virker først igen, når du er online. Der gemmes ingen vagter eller oplysninger om dig på enheden.</p>
+</section>

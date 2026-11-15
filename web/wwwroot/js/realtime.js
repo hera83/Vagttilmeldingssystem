@@ -118,23 +118,38 @@
     });
 
     connection.onreconnecting(function () {
-        showStatus('Forbindelsen er afbrudt – prøver igen …');
+        // Uden net viser pwa.js bjælken "Du er offline" i stedet.
+        if (navigator.onLine !== false) {
+            showStatus('Forbindelsen er afbrudt – prøver igen …');
+        }
     });
 
     connection.onreconnected(function () {
         hideStatus();
         // Noget kan være ændret, mens forbindelsen var væk.
-        refresh(regions().map(function (region) { return region.getAttribute('data-live-region'); }));
+        refreshAll();
     });
 
     connection.onclose(function () {
+        if (navigator.onLine === false) {
+            // Start igen, når nettet er tilbage, og hent de nyeste tal.
+            window.addEventListener('online', function () { start(0, true); }, { once: true });
+            return;
+        }
         showStatus('Live-opdatering er stoppet. Genindlæs siden for at se de nyeste tal.');
     });
 
-    function start(attempt) {
-        connection.start().then(hideStatus).catch(function () {
+    function refreshAll() {
+        refresh(regions().map(function (region) { return region.getAttribute('data-live-region'); }));
+    }
+
+    function start(attempt, refreshAfter) {
+        connection.start().then(function () {
+            hideStatus();
+            if (refreshAfter) { refreshAll(); }
+        }).catch(function () {
             if (attempt < 5) {
-                setTimeout(function () { start(attempt + 1); }, 2000 * (attempt + 1));
+                setTimeout(function () { start(attempt + 1, refreshAfter); }, 2000 * (attempt + 1));
             } else {
                 showStatus('Live-opdatering kunne ikke starte. Genindlæs siden for at se de nyeste tal.');
             }

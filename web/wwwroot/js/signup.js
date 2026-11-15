@@ -37,7 +37,8 @@
 
         count.textContent = String(checked.length);
         empty.hidden = checked.length > 0;
-        submit.disabled = !profileComplete || checked.length === 0;
+        // Uden net kan der ikke tilmeldes (pwa.js viser bjælken "Du er offline").
+        submit.disabled = !profileComplete || checked.length === 0 || navigator.onLine === false;
     }
 
     document.addEventListener('change', function (event) {
@@ -47,6 +48,8 @@
     });
 
     document.addEventListener('live:updated', update);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
 
     // Undgå dobbelt-klik, der sender formularen to gange.
     document.addEventListener('submit', function (event) {

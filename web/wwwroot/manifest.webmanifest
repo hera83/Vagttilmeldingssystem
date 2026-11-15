@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "Vagttilmelding",
+  "short_name": "Vagttilmelding",
+  "description": "Tilmelding til vagter for forældre – og planlægning af begivenheder og vagter for administratorer.",
+  "lang": "da",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#1764B8",
+  "background_color": "#F6F9FD",
+  "categories": ["productivity", "education"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ledige vagter",
+      "url": "/Signup",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Mine vagter",
+      "url": "/MyShifts",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

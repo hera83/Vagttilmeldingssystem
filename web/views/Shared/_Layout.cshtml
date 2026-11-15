@@ -11,6 +11,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] – Vagttilmelding</title>
     <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="~/manifest.webmanifest" />
+    <meta name="theme-color" content="#1764B8" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Vagttilmelding" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="~/icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="@(isAuthenticated ? "is-authenticated" : "is-anonymous")@(isAdmin ? " is-admin" : "")">
@@ -55,6 +62,7 @@
             </aside>
         }
         <main id="main" class="main" tabindex="-1">
+            <div class="alert alert-warning live-status" data-offline-status role="status" tabindex="-1" hidden><icon name="wifi-off" /><span><strong>Du er offline</strong> – tilmelding kræver internet.</span></div>
             <div class="alert alert-warning live-status" data-live-status role="status" aria-live="polite" hidden></div>
             @if (TempData["Success"] is string success)
             {
@@ -79,6 +87,7 @@
     }
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/pwa.js" asp-append-version="true"></script>
     @if (isAuthenticated)
     {
         <script src="~/lib/microsoft-signalr/signalr.min.js" asp-append-version="true"></script>
