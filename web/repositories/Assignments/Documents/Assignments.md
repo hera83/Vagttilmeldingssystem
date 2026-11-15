@@ -17,6 +17,8 @@
 | `GetActiveForUserAndShiftAsync(Guid userId, Guid shiftId)` | Én af brugerens egne vagter, eller `null` (også hvis vagten findes, men ikke er brugerens). |
 | `GetActiveStartingBetweenAsync(DateTime fromUtc, DateTime toUtc)` | Aktive tildelinger hos aktive brugere, hvor vagten starter efter `fromUtc` og senest `toUtc` (også tildelte kladder). Bruges af `ReminderManager`. |
 | `GetActiveUpcomingByIdAsync(Guid assignmentId)` | Én aktiv tildeling med vagtens tidspunkt, eller `null` (afmeldt, slettet eller bruger deaktiveret). Bruges til at springe forældede påmindelser over ved afsendelse. |
+| `GetRecentActivityAsync(int take)` | De seneste tilmeldinger (`Enrolled`), admin-tildelinger (`Assigned`) og fjernelser (`Removed`) med brugerens navn, vagt og begivenhed, nyeste først. **Kun til admin.** |
+| `GetActiveForEventAsync(Guid eventId)` | Aktive tildelinger i en begivenhed med navn og e-mail, sorteret efter vagtens start (deltagerlisten). **Kun til admin.** |
 | `AnyForUserAsync(Guid userId)` | Har brugeren tildelinger (også afmeldte)? Så kan brugeren ikke slettes. |
 
 ## Transaktionsgrænse (vigtigt)

@@ -17,4 +17,7 @@ public interface IEventRepository
     Task<bool> SetArchivedAsync(Guid id, bool archived, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Ikke-arkiverede begivenheder, der ikke er slut før fromDate, de næste først.</summary>
+    Task<List<EventDto>> GetUpcomingAsync(DateOnly fromDate, int take, CancellationToken cancellationToken = default);
 }

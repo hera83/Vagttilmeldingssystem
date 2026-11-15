@@ -31,4 +31,10 @@ public interface IAssignmentRepository
 
     /// <summary>Én aktiv tildeling hos en aktiv bruger med vagtens tidspunkt, eller null (afmeldt, slettet eller deaktiveret bruger).</summary>
     Task<UpcomingAssignmentDto?> GetActiveUpcomingByIdAsync(Guid assignmentId, CancellationToken cancellationToken = default);
+
+    /// <summary>De seneste tilmeldinger, admin-tildelinger og fjernelser, nyeste først. Kun navne. Kun til admin.</summary>
+    Task<List<AssignmentActivityDto>> GetRecentActivityAsync(int take, CancellationToken cancellationToken = default);
+
+    /// <summary>Aktive tildelinger i en begivenhed med brugerens navn og e-mail (deltagerlisten). Kun til admin.</summary>
+    Task<List<EventParticipantDto>> GetActiveForEventAsync(Guid eventId, CancellationToken cancellationToken = default);
 }

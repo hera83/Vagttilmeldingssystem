@@ -21,4 +21,7 @@ public interface INotificationRepository
     Task<bool> ClearContentAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<bool> MarkAttemptFailedAsync(Guid id, string error, DateTime? nextAttemptAtUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Køens status til dashboardet: sendt og opgivet siden sinceUtc, ventende nu og den seneste opgivne besked.</summary>
+    Task<NotificationStatsDto> GetStatsAsync(DateTime sinceUtc, CancellationToken cancellationToken = default);
 }

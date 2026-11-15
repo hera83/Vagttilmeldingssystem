@@ -121,4 +121,38 @@ public static class EventsViewModelMapper
             yield return new ValidationResult("Slutdatoen må ikke ligge før startdatoen.", ["EndDate"]);
         }
     }
+
+    /// <summary>Kolonnerne i deltagerlisten (CSV).</summary>
+    public static readonly string[] ParticipantColumns =
+        ["Vagt", "Dato", "Tid", "Navn", "Telefon", "E-mail", "Trøjestørrelse", "Væskebilletter", "Tivoliark", "Barnets navn", "Klasse", "Tilmeldt"];
+
+    /// <summary>Deltagerlisten som CSV til dansk Excel (semikolon, CRLF). Kun admin.</summary>
+    public static string ToParticipantsCsv(this ParticipantListDto list)
+    {
+        var builder = new System.Text.StringBuilder();
+        builder.Append(CsvHelper.Line(ParticipantColumns)).Append(CsvHelper.NewLine);
+        foreach (var row in list.Rows)
+        {
+            builder.Append(CsvHelper.Line(
+            [
+                row.ShiftTitle,
+                row.StartUtc.ToDanishDateText(),
+                DateTimeExtensions.ToDanishTimeRangeText(row.StartUtc, row.EndUtc),
+                row.Name,
+                row.Phone,
+                row.Email,
+                row.ShirtSize,
+                row.DrinkTickets?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                row.TivoliSheets?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                row.ChildName,
+                row.ChildClass,
+                row.Source == AssignmentSource.Self ? "Selv" : "Af administrator"
+            ])).Append(CsvHelper.NewLine);
+        }
+
+        return builder.ToString();
+    }
+
+    public static string ToParticipantsFileName(this ParticipantListDto list, DateTime nowUtc) =>
+        $"deltagerliste-{list.Event.Name.ToFileNameSlug()}-{nowUtc.ToDanishTime():yyyy-MM-dd}.csv";
 }

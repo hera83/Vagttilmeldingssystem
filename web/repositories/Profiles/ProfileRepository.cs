@@ -67,4 +67,13 @@ public class ProfileRepository(WebDbContext dbContext) : IProfileRepository
             .Where(x => !x.EmailNotifications)
             .Select(x => x.UserId)
             .ToListAsync(cancellationToken)).ToHashSet();
+
+    public async Task<Dictionary<Guid, ProfileDto>> GetByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+    {
+        var ids = userIds.Distinct().ToList();
+        return await dbContext.Profiles.AsNoTracking()
+            .Where(x => ids.Contains(x.UserId))
+            .Select(ProfileMapper.ToDtoExpression)
+            .ToDictionaryAsync(x => x.UserId, cancellationToken);
+    }
 }

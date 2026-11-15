@@ -15,6 +15,9 @@
 | `GetOpenAsync(DateTime nowUtc)` | **Til forældrene:** kun `Open` vagter i ikke-arkiverede begivenheder, der ikke er startet, med begivenhedens navn og sted. Det eneste sted, hvor vagter læses til brugere (ud over deres egne i `Assignments`). |
 | `GetUnnotifiedOpenedAsync(DateTime nowUtc)` | Frigivelser, der endnu ikke er sendt beskeder om: åbne vagter med `OpenNotifiedAt = null`, grupperet pr. begivenhed og `OpenedAt`, med antal vagter, der stadig kan tilmeldes. Bruges kun af `NotificationManager`. Kladder er aldrig med. |
 | `MarkOpenNotifiedAsync(IReadOnlyCollection<Guid> shiftIds, DateTime atUtc)` | Sætter `OpenNotifiedAt`, når beskederne om frigivelsen er lagt i køen. |
+| `GetOverviewAsync(DateTime nowUtc)` | Dashboardets tal for kommende vagter i ikke-arkiverede begivenheder: åbne vagter, ledige pladser, kladder, pladser og besatte pladser (alle statusser). Tæller aktive tildelinger. |
+| `GetEventStatsAsync(IEnumerable<Guid> eventIds)` | Pr. begivenhed: antal vagter, kladder, åbne, pladser og besatte pladser (dashboardet). |
+| `GetRecentOpeningsAsync(int take)` | De seneste frigivelser (begivenhed, tidspunkt, antal vagter, hvem der åbnede), nyeste først ("Seneste aktivitet"). |
 | `GetStatusCountsAsync(IEnumerable<Guid> eventIds)` | Antal kladder og åbne vagter pr. begivenhed (til begivenhedslisten). |
 | `OpenAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId)` | **Frigivelsen:** sætter de valgte kladder i begivenheden til `Open` (med `OpenedAt`/`OpenedByUserId`) i én transaktion og returnerer id'erne på de åbnede. Vagter fra andre begivenheder og allerede åbne vagter ignoreres, så et gentaget kald åbner 0. Det eneste sted, hvor status bliver `Open`. |
 | `CreateAsync(Guid eventId, CreateShiftDto dto)` | Opretter en vagt. Status er **altid** `Draft`. Dto'en har ikke engang et statusfelt. |

@@ -14,6 +14,7 @@
 | `CreateAsync(CreateEventDto dto)` | Opretter og returnerer begivenheden. Det udløser ingen frigivelse eller beskeder. |
 | `UpdateAsync(Guid id, UpdateEventDto dto)` | Opdaterer, eller `null`. |
 | `SetArchivedAsync(Guid id, bool archived)` | Arkiverer eller genåbner. `false`, hvis den ikke findes. |
+| `GetUpcomingAsync(DateOnly fromDate, int take)` | Ikke-arkiverede begivenheder, der ikke er slut før `fromDate`, de næste først (dashboardet). |
 | `DeleteAsync(Guid id)` | Sletter. `true`, hvis den fandtes. |
 
 ## Faldgruber

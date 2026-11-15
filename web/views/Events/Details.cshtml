@@ -21,6 +21,7 @@
         {
             <a class="btn btn-primary" asp-action="Open" asp-route-id="@Model.Id"><icon name="play" />Åbn for tilmelding</a>
         }
+        <a class="btn btn-secondary" asp-action="Participants" asp-route-id="@Model.Id" title="Hent deltagerlisten som CSV-fil til Excel"><icon name="download" />Deltagerliste</a>
         <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@Model.Id"><icon name="edit" />Ret begivenhed</a>
         @if (Model.IsArchived)
         {

@@ -63,6 +63,23 @@ public static class DateTimeExtensions
         return end.Date > start.Date ? $"{text} (næste dag)" : text;
     }
 
+    /// <summary>Fx "I dag kl. 10:24", "I går kl. 16:47", "I morgen kl. 08:00" eller "fre. 14. mar. kl. 17:00" (med år, hvis det ikke er i år).</summary>
+    public static string ToDanishRelativeText(this DateTime utc, DateTime nowUtc)
+    {
+        var local = utc.ToDanishTime();
+        var today = nowUtc.ToDanishTime().Date;
+        var time = local.ToString("HH':'mm", Danish);
+        return (local.Date - today).Days switch
+        {
+            0 => $"I dag kl. {time}",
+            -1 => $"I går kl. {time}",
+            1 => $"I morgen kl. {time}",
+            _ => local.Year == today.Year
+                ? $"{local.ToString("ddd d. MMM", Danish)} kl. {time}"
+                : $"{local.ToString("ddd d. MMM yyyy", Danish)} kl. {time}"
+        };
+    }
+
     /// <summary>Fx "fre. 14. mar. 2025".</summary>
     public static string ToDanishDateText(this DateOnly date) =>
         date.ToString("ddd d. MMM yyyy", Danish);

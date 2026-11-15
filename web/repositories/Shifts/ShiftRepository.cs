@@ -179,4 +179,73 @@ public class ShiftRepository(WebDbContext dbContext) : IShiftRepository
         await transaction.CommitAsync(cancellationToken);
         return new ShiftChangeResultDto { Status = deleted > 0 ? ShiftChangeStatus.Success : ShiftChangeStatus.NotFound };
     }
+
+    public async Task<ShiftOverviewDto> GetOverviewAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+    {
+        var rows = await (from s in dbContext.Shifts.AsNoTracking()
+                          join e in dbContext.Events on s.EventId equals e.Id
+                          where !e.IsArchived && s.StartUtc > nowUtc
+                          select new
+                          {
+                              s.Status,
+                              s.Capacity,
+                              Taken = dbContext.Assignments.Count(a => a.ShiftId == s.Id && a.IsActive)
+                          }).ToListAsync(cancellationToken);
+
+        var open = rows.Where(x => x.Status == ShiftStatus.Open).ToList();
+        return new ShiftOverviewDto
+        {
+            OpenShiftCount = open.Count,
+            OpenShiftsWithFreeSeats = open.Count(x => x.Taken < x.Capacity),
+            OpenFreeSeats = open.Sum(x => Math.Max(0, x.Capacity - x.Taken)),
+            DraftShiftCount = rows.Count(x => x.Status == ShiftStatus.Draft),
+            UpcomingCapacity = rows.Sum(x => x.Capacity),
+            UpcomingTaken = rows.Sum(x => Math.Min(x.Taken, x.Capacity))
+        };
+    }
+
+    public async Task<List<EventShiftStatsDto>> GetEventStatsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default)
+    {
+        var ids = eventIds.Distinct().ToList();
+        var rows = await dbContext.Shifts.AsNoTracking()
+            .Where(s => ids.Contains(s.EventId))
+            .Select(s => new { s.EventId, s.Status, s.Capacity, Taken = dbContext.Assignments.Count(a => a.ShiftId == s.Id && a.IsActive) })
+            .ToListAsync(cancellationToken);
+
+        return rows.GroupBy(x => x.EventId).Select(g => new EventShiftStatsDto
+        {
+            EventId = g.Key,
+            ShiftCount = g.Count(),
+            DraftCount = g.Count(x => x.Status == ShiftStatus.Draft),
+            OpenCount = g.Count(x => x.Status == ShiftStatus.Open),
+            Capacity = g.Sum(x => x.Capacity),
+            Taken = g.Sum(x => Math.Min(x.Taken, x.Capacity))
+        }).ToList();
+    }
+
+    public async Task<List<OpeningActivityDto>> GetRecentOpeningsAsync(int take, CancellationToken cancellationToken = default)
+    {
+        var rows = await (from s in dbContext.Shifts.AsNoTracking()
+                          join e in dbContext.Events on s.EventId equals e.Id
+                          join u in dbContext.Users on s.OpenedByUserId equals u.Id into openedBy
+                          from u in openedBy.DefaultIfEmpty()
+                          where s.OpenedAt != null
+                          orderby s.OpenedAt descending
+                          select new { s.EventId, EventName = e.Name, OpenedAt = s.OpenedAt!.Value, OpenedByName = u == null ? null : u.DisplayName })
+            .Take(take * 50)
+            .ToListAsync(cancellationToken);
+
+        return rows.GroupBy(x => new { x.EventId, x.OpenedAt })
+            .Select(g => new OpeningActivityDto
+            {
+                EventId = g.Key.EventId,
+                EventName = g.First().EventName,
+                OpenedAt = g.Key.OpenedAt,
+                ShiftCount = g.Count(),
+                OpenedByName = g.First().OpenedByName
+            })
+            .OrderByDescending(x => x.OpenedAt)
+            .Take(take)
+            .ToList();
+    }
 }

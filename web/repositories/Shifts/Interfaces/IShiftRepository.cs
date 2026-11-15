@@ -46,4 +46,13 @@ public interface IShiftRepository
 
     /// <summary>Sletter vagten (og dens afmeldte historik). Afvises med HasActiveAssignments, hvis nogen er på vagten (tjekket i samme transaktion).</summary>
     Task<ShiftChangeResultDto> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Dashboardets tal for kommende vagter (ikke startet) i ikke-arkiverede begivenheder. Tæller aktive tildelinger.</summary>
+    Task<ShiftOverviewDto> GetOverviewAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Vagter, kladder, åbne, pladser og besatte pladser pr. begivenhed (begivenheder uden vagter er ikke med).</summary>
+    Task<List<EventShiftStatsDto>> GetEventStatsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default);
+
+    /// <summary>De seneste frigivelser (pr. begivenhed og OpenedAt), nyeste først.</summary>
+    Task<List<OpeningActivityDto>> GetRecentOpeningsAsync(int take, CancellationToken cancellationToken = default);
 }

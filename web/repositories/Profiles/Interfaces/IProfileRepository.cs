@@ -20,4 +20,7 @@ public interface IProfileRepository
 
     /// <summary>Brugere, der har slået e-mail-beskeder fra.</summary>
     Task<HashSet<Guid>> GetEmailOptOutUserIdsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Profilerne for brugerne (brugere uden profil er ikke med). Kun til admin (deltagerlisten).</summary>
+    Task<Dictionary<Guid, ProfileDto>> GetByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
 }

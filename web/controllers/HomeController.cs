@@ -17,6 +17,12 @@ public class HomeController(IEnrollmentManager enrollmentManager) : Controller
             return Challenge();
         }
 
+        // Administratorer får dashboardet som forside (step 13).
+        if (User.IsInRole(UserClaimTypes.AdminRole))
+        {
+            return RedirectToAction(nameof(DashboardController.Index), "Dashboard");
+        }
+
         var overview = await enrollmentManager.GetHomeAsync(userId, cancellationToken);
         return View(overview.ToIndexHomeViewModel(DateTime.UtcNow));
     }

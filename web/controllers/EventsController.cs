@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using web.Data.Models;
+using web.Extensions;
 using web.Infrastructure.Authentication;
 using web.Managers.Planning.Dtos;
 using web.Managers.Planning.Interfaces;
@@ -14,8 +15,24 @@ namespace web.Controllers;
 /// PlanningManager, fordi de også bruger vagterne (hybrid-reglen pr. action).
 /// </summary>
 [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
-public class EventsController(IEventRepository eventRepository, IPlanningManager planningManager) : Controller
+public class EventsController(IEventRepository eventRepository, IPlanningManager planningManager, ILogger<EventsController> logger) : Controller
 {
+    /// <summary>Deltagerlisten som CSV (persondata, kun admin). Hændelsen logges uden persondata.</summary>
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public async Task<IActionResult> Participants(Guid id, CancellationToken cancellationToken)
+    {
+        var list = await planningManager.GetParticipantsAsync(id, cancellationToken);
+        if (list is null)
+        {
+            return NotFound();
+        }
+
+        logger.LogInformation("Participant list for event {EventId} exported by user {UserId} ({Rows} rows)",
+            id, UserPrincipalFactory.GetUserId(User), list.Rows.Count);
+        return File(CsvHelper.ToUtf8WithBom(list.ToParticipantsCsv()), "text/csv; charset=utf-8", list.ToParticipantsFileName(DateTime.UtcNow));
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index(string? q, bool archived, CancellationToken cancellationToken)
     {

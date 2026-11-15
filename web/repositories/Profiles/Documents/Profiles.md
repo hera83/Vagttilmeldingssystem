@@ -14,6 +14,7 @@
 | `SaveAsync(Guid userId, SaveProfileDto dto)` | Opretter eller opdaterer brugerens profil og returnerer den. Rører ikke `EmailNotifications`. |
 | `SetEmailNotificationsAsync(Guid userId, bool enabled)` | Slår e-mail-beskeder (frigivelser, bekræftelser, påmindelser) til/fra. Opretter en tom profil, hvis der ingen er. |
 | `GetEmailNotificationsAsync(Guid userId)` | Er e-mail-beskeder slået til? `true` uden profil (standard). |
+| `GetByUserIdsAsync(IEnumerable<Guid> userIds)` | Profilerne for flere brugere (deltagerlisten). **Kun til admin.** |
 | `GetEmailOptOutUserIdsAsync()` | Brugere, der har slået e-mail-beskeder fra. |
 
 ## Faldgruber

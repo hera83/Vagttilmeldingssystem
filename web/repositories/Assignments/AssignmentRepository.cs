@@ -186,4 +186,60 @@ public class AssignmentRepository(WebDbContext dbContext) : IAssignmentRepositor
             Source = a.Source,
             AssignedAt = a.CreatedAt
         };
+
+    public async Task<List<AssignmentActivityDto>> GetRecentActivityAsync(int take, CancellationToken cancellationToken = default)
+    {
+        var created = await (from a in dbContext.Assignments.AsNoTracking()
+                             join s in dbContext.Shifts on a.ShiftId equals s.Id
+                             join e in dbContext.Events on s.EventId equals e.Id
+                             join u in dbContext.Users on a.UserId equals u.Id
+                             orderby a.CreatedAt descending
+                             select new AssignmentActivityDto
+                             {
+                                 Kind = a.Source == AssignmentSource.Self ? AssignmentActivityKind.Enrolled : AssignmentActivityKind.Assigned,
+                                 At = a.CreatedAt,
+                                 UserDisplayName = u.DisplayName,
+                                 ShiftId = s.Id,
+                                 ShiftTitle = s.Title,
+                                 EventId = e.Id,
+                                 EventName = e.Name
+                             }).Take(take).ToListAsync(cancellationToken);
+
+        var removed = await (from a in dbContext.Assignments.AsNoTracking()
+                             join s in dbContext.Shifts on a.ShiftId equals s.Id
+                             join e in dbContext.Events on s.EventId equals e.Id
+                             join u in dbContext.Users on a.UserId equals u.Id
+                             where a.CancelledAt != null
+                             orderby a.CancelledAt descending
+                             select new AssignmentActivityDto
+                             {
+                                 Kind = AssignmentActivityKind.Removed,
+                                 At = a.CancelledAt!.Value,
+                                 UserDisplayName = u.DisplayName,
+                                 ShiftId = s.Id,
+                                 ShiftTitle = s.Title,
+                                 EventId = e.Id,
+                                 EventName = e.Name
+                             }).Take(take).ToListAsync(cancellationToken);
+
+        return created.Concat(removed).OrderByDescending(x => x.At).Take(take).ToList();
+    }
+
+    public Task<List<EventParticipantDto>> GetActiveForEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
+        (from a in dbContext.Assignments.AsNoTracking()
+         join s in dbContext.Shifts on a.ShiftId equals s.Id
+         join u in dbContext.Users on a.UserId equals u.Id
+         where s.EventId == eventId && a.IsActive
+         orderby s.StartUtc, s.Title, u.DisplayName
+         select new EventParticipantDto
+         {
+             ShiftId = s.Id,
+             ShiftTitle = s.Title,
+             StartUtc = s.StartUtc,
+             EndUtc = s.EndUtc,
+             UserId = u.Id,
+             DisplayName = u.DisplayName,
+             UserName = u.UserName,
+             Source = a.Source
+         }).ToListAsync(cancellationToken);
 }

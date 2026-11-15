@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using web.Data;
 using web.Data.Models;
+using web.Infrastructure.Notifications;
 using web.Repositories.Notifications.Dtos;
 using web.Repositories.Notifications.Interfaces;
 using web.Repositories.Notifications.Mappers;
@@ -90,4 +91,21 @@ public class NotificationRepository(WebDbContext dbContext) : INotificationRepos
     }
 
     private static string Truncate(string value) => value.Length <= MaxErrorLength ? value : value[..MaxErrorLength];
+
+    public async Task<NotificationStatsDto> GetStatsAsync(DateTime sinceUtc, CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Notifications.AsNoTracking();
+        return new NotificationStatsDto
+        {
+            SentSince = await query.CountAsync(x => x.Status == NotificationStatus.Sent && x.SentAt >= sinceUtc, cancellationToken),
+            RemindersSentSince = await query.CountAsync(x => x.Status == NotificationStatus.Sent && x.SentAt >= sinceUtc &&
+                                                            (x.Kind == NotificationKinds.Reminder48 || x.Kind == NotificationKinds.Reminder24), cancellationToken),
+            PendingCount = await query.CountAsync(x => x.Status == NotificationStatus.Pending, cancellationToken),
+            FailedSince = await query.CountAsync(x => x.Status == NotificationStatus.Failed && x.UpdatedAt >= sinceUtc, cancellationToken),
+            LatestFailure = await query.Where(x => x.Status == NotificationStatus.Failed)
+                .OrderByDescending(x => x.UpdatedAt)
+                .Select(NotificationMapper.ToDtoExpression)
+                .FirstOrDefaultAsync(cancellationToken)
+        };
+    }
 }

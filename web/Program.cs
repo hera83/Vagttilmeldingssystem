@@ -21,6 +21,8 @@ using web.Infrastructure.Realtime;
 using web.Managers.AccountRecovery;
 using web.Managers.AccountRecovery.Interfaces;
 using web.Managers.Assignments;
+using web.Managers.Dashboard;
+using web.Managers.Dashboard.Interfaces;
 using web.Managers.Assignments.Interfaces;
 using web.Managers.Enrollment;
 using web.Managers.Enrollment.Interfaces;
@@ -190,6 +192,7 @@ builder.Services.AddScoped<IEnrollmentManager, EnrollmentManager>();
 builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddScoped<IAccountRecoveryManager, AccountRecoveryManager>();
 builder.Services.AddScoped<IReminderManager, ReminderManager>();
+builder.Services.AddScoped<IDashboardManager, DashboardManager>();
 
 // Eksterne services
 // Push (light pattern med biblioteket Lib.Net.Http.WebPush). Adressen er abonnementets, så klienten har ingen BaseAddress.

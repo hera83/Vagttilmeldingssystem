@@ -56,6 +56,7 @@
             <aside class="sidebar">
                 <p class="sidebar-title" id="admin-menu-title">Administration</p>
                 <nav aria-labelledby="admin-menu-title">
+                    <a asp-controller="Dashboard" asp-action="Index" aria-current="@Current("Dashboard")"><icon name="grid" />Dashboard</a>
                     <a asp-controller="Events" asp-action="Index" aria-current="@Current("Events")"><icon name="calendar" />Begivenheder</a>
                     <a asp-controller="Users" asp-action="Index" aria-current="@Current("Users")"><icon name="users" />Brugere</a>
                 </nav>

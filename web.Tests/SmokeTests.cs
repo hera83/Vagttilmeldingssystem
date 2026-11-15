@@ -43,8 +43,13 @@ public class SmokeTests : IClassFixture<WebAppFactory>
     {
         using var client = _factory.CreateBrowser();
         await client.LoginAsync(WebAppFactory.AdminUserName, WebAppFactory.AdminPassword);
-        var html = await client.GetHtmlAsync("/");
-        Assert.Contains("Velkommen", html);
+
+        // Administratorens forside er dashboardet (step 13).
+        var home = await client.GetAsync("/");
+        Assert.Equal(HttpStatusCode.Redirect, home.StatusCode);
+        Assert.Equal("/Dashboard", home.Headers.Location?.OriginalString);
+        var html = await client.GetHtmlAsync("/Dashboard");
+        Assert.Contains("Dashboard", html);
         Assert.Contains("Brugere", html);
     }
 

@@ -1,0 +1,231 @@
+@model web.ViewModels.Dashboard.IndexDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Overblik over begivenheder, vagter, tilmeldinger og beskeder.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-controller="Events" asp-action="Create"><icon name="plus" />Opret begivenhed</a>
+    </div>
+</div>
+
+<div data-live-region="dashboard" data-live-on="eventChanged">
+    <div class="kpi-grid">
+        <a class="card kpi" asp-controller="Events" asp-action="Index">
+            <span class="kpi-main">
+                <span class="kpi-label"><icon name="calendar" />Aktive begivenheder</span>
+                <strong class="kpi-value">@Model.ActiveEventCount</strong>
+                <span class="kpi-sub">Ikke arkiverede</span>
+            </span>
+        </a>
+        <a class="card kpi" asp-controller="Signup" asp-action="Index">
+            <span class="kpi-main">
+                <span class="kpi-label"><icon name="users" />Åbne vagter</span>
+                <strong class="kpi-value">@Model.OpenShiftCount</strong>
+                <span class="kpi-sub">@Model.OpenFreeSeats ledige @(Model.OpenFreeSeats == 1 ? "plads" : "pladser")@(Model.DraftShiftCount > 0 ? $" · {Model.DraftShiftCount} {(Model.DraftShiftCount == 1 ? "kladde" : "kladder")}" : "")</span>
+            </span>
+        </a>
+        <div class="card kpi">
+            <span class="kpi-main">
+                <span class="kpi-label"><icon name="check-circle" />Besatte pladser</span>
+                <strong class="kpi-value">@Model.TakenSeats <small>af @Model.Capacity</small></strong>
+                <progress class="progress" max="@Math.Max(1, Model.Capacity)" value="@Model.TakenSeats" aria-label="@Model.OccupancyPercent procent af pladserne er besat">@Model.OccupancyPercent %</progress>
+                <span class="kpi-sub">@Model.OccupancyPercent % af kommende vagter</span>
+            </span>
+        </div>
+        <div class="card kpi">
+            <span class="kpi-main">
+                <span class="kpi-label"><icon name="bell" />Påmindelser sendt</span>
+                <strong class="kpi-value">@Model.RemindersSentLast7Days</strong>
+                <span class="kpi-sub">de seneste 7 dage</span>
+            </span>
+        </div>
+        <a class="card kpi" asp-controller="Users" asp-action="Index">
+            <span class="kpi-main">
+                <span class="kpi-label"><icon name="user" />Mangler profil</span>
+                <strong class="kpi-value">@Model.IncompleteProfileCount</strong>
+                <span class="kpi-sub">af @Model.ActiveUserCount aktive brugere</span>
+            </span>
+        </a>
+    </div>
+
+    <section class="card mb-1" aria-labelledby="upcoming-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="calendar" /></span>
+                <div>
+                    <h2 id="upcoming-title">Kommende begivenheder</h2>
+                    <p><a asp-controller="Events" asp-action="Index">Se alle begivenheder</a></p>
+                </div>
+            </div>
+            @if (Model.UpcomingEvents.Count == 0)
+            {
+                <p class="muted mb-0">Der er ingen kommende begivenheder. <a asp-controller="Events" asp-action="Create">Opret en begivenhed</a>.</p>
+            }
+            else
+            {
+                <div class="table-wrap table-flat">
+                    <table class="table table-cards">
+                        <thead>
+                            <tr>
+                                <th scope="col">Begivenhed</th>
+                                <th scope="col">Dato</th>
+                                <th scope="col" class="num">Vagter</th>
+                                <th scope="col">Besat</th>
+                                <th scope="col">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.UpcomingEvents)
+                            {
+                                <tr>
+                                    <td class="cell-main">
+                                        <a asp-controller="Events" asp-action="Details" asp-route-id="@item.Id"><strong>@item.Name</strong></a>
+                                        <span class="muted small">@item.Location</span>
+                                    </td>
+                                    <td data-label="Dato" class="nowrap">@item.PeriodText</td>
+                                    <td data-label="Vagter" class="num">@item.ShiftCount</td>
+                                    <td data-label="Besat">
+                                        <span class="taken">
+                                            <span>@item.Taken af @item.Capacity (@item.Percent %)</span>
+                                            <progress class="progress @(item.Capacity > 0 && item.Taken >= item.Capacity ? "is-full" : "")" max="@Math.Max(1, item.Capacity)" value="@item.Taken" aria-hidden="true"></progress>
+                                        </span>
+                                    </td>
+                                    <td data-label="Status"><span class="badge @item.StatusBadgeClass">@item.StatusText</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+    </section>
+
+    <div class="grid grid-3 dashboard-row">
+        <section class="card" aria-labelledby="activity-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="bar-chart" /></span>
+                <div>
+                    <h2 id="activity-title">Seneste aktivitet</h2>
+                    <p>Tilmeldinger, tildelinger og frigivelser.</p>
+                </div>
+            </div>
+            @if (Model.Activity.Count == 0)
+            {
+                <p class="muted mb-0">Ingen aktivitet endnu.</p>
+            }
+            else
+            {
+                <ul class="activity-list">
+                    @foreach (var item in Model.Activity)
+                    {
+                        <li>
+                            <span class="activity-icon"><icon name="@item.Icon" /></span>
+                            <span class="activity-main">
+                                <strong>@item.Title</strong>
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@item.EventId">@item.Text</a>
+                            </span>
+                            <span class="activity-when">@item.WhenText</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="card" aria-labelledby="messages-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="bell" /></span>
+                <div>
+                    <h2 id="messages-title">Beskeder og påmindelser</h2>
+                    <p>Push og e-mail sendes fra en kø. Påmindelser kommer 48 og 24 timer før vagten.</p>
+                </div>
+            </div>
+            @if (Model.ReminderError is not null)
+            {
+                <div class="alert alert-error"><icon name="alert-triangle" /><p><strong>Påmindelser fejlede:</strong> @Model.ReminderError</p></div>
+            }
+            @if (Model.FailedLast7Days > 0 && Model.LatestFailureText is not null)
+            {
+                <div class="alert alert-warning"><icon name="alert-triangle" /><p><strong>@Model.FailedLast7Days @(Model.FailedLast7Days == 1 ? "besked er" : "beskeder er") opgivet de seneste 7 dage.</strong> Seneste: @Model.LatestFailureText</p></div>
+            }
+            <dl class="details">
+                <dt>Påmindelser</dt>
+                <dd>@(Model.RemindersEnabled ? $"Slået til – tjekker {Model.ReminderIntervalText}" : "Slået fra (Reminders:Enabled)")</dd>
+                <dt>Seneste tjek</dt>
+                <dd>@Model.LastScanText@(Model.LastScanText != "Ikke kørt endnu" ? $" ({Model.LastScanQueued} nye)" : "")</dd>
+                <dt>Næste tjek</dt>
+                <dd>@Model.NextScanText</dd>
+                <dt>Sendt (7 dage)</dt>
+                <dd>@Model.MessagesSentLast7Days</dd>
+                <dt>Venter i køen</dt>
+                <dd>@Model.PendingCount</dd>
+                <dt>Push</dt>
+                <dd><span class="badge @(Model.PushConfigured ? "badge-open" : "badge-warning")">@(Model.PushConfigured ? "Sat op" : "Ikke sat op")</span></dd>
+                <dt>E-mail</dt>
+                <dd><span class="badge @(Model.MailConfigured ? "badge-open" : "badge-warning")">@(Model.MailConfigured ? "Sat op" : "Ikke sat op")</span></dd>
+            </dl>
+        </section>
+
+        <section class="card" aria-labelledby="shortcuts-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="check-circle" /></span>
+                <div>
+                    <h2 id="shortcuts-title">Genveje</h2>
+                    <p>Det, der venter på dig.</p>
+                </div>
+            </div>
+            <ul class="item-list">
+                @foreach (var item in Model.EventsWithDrafts)
+                {
+                    <li>
+                        <a class="item-row" asp-controller="Events" asp-action="Open" asp-route-id="@item.Id">
+                            <span class="card-icon"><icon name="play" /></span>
+                            <span class="item-main">
+                                <strong>Åbn for tilmelding: @item.Name</strong>
+                                <span class="meta"><span>@item.DraftCount @(item.DraftCount == 1 ? "kladde" : "kladder") · @item.PeriodText</span></span>
+                            </span>
+                            <icon name="chevron-right" class="item-chevron" />
+                        </a>
+                    </li>
+                }
+                @if (Model.OpenShiftsWithFreeSeats > 0)
+                {
+                    <li>
+                        <a class="item-row" asp-controller="Signup" asp-action="Index">
+                            <span class="card-icon"><icon name="users" /></span>
+                            <span class="item-main">
+                                <strong>@Model.OpenShiftsWithFreeSeats @(Model.OpenShiftsWithFreeSeats == 1 ? "vagt har" : "vagter har") ledige pladser</strong>
+                                <span class="meta"><span>@Model.OpenFreeSeats ledige @(Model.OpenFreeSeats == 1 ? "plads" : "pladser") i alt</span></span>
+                            </span>
+                            <icon name="chevron-right" class="item-chevron" />
+                        </a>
+                    </li>
+                }
+                @if (Model.IncompleteProfileCount > 0)
+                {
+                    <li>
+                        <a class="item-row" asp-controller="Users" asp-action="Index">
+                            <span class="card-icon"><icon name="user" /></span>
+                            <span class="item-main">
+                                <strong>@Model.IncompleteProfileCount @(Model.IncompleteProfileCount == 1 ? "bruger mangler" : "brugere mangler") at udfylde profilen</strong>
+                                <span class="meta"><span>De kan ikke tilmelde sig vagter endnu</span></span>
+                            </span>
+                            <icon name="chevron-right" class="item-chevron" />
+                        </a>
+                    </li>
+                }
+                <li>
+                    <a class="item-row" asp-controller="Events" asp-action="Create">
+                        <span class="card-icon"><icon name="plus" /></span>
+                        <span class="item-main">
+                            <strong>Opret ny begivenhed</strong>
+                            <span class="meta"><span>Planlæg næste arrangement, og opret vagter</span></span>
+                        </span>
+                        <icon name="chevron-right" class="item-chevron" />
+                    </a>
+                </li>
+            </ul>
+        </section>
+    </div>
+</div>

@@ -85,4 +85,12 @@ public class EventRepository(WebDbContext dbContext) : IEventRepository
 
     private static string EscapeLike(string value) =>
         value.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+
+    public Task<List<EventDto>> GetUpcomingAsync(DateOnly fromDate, int take, CancellationToken cancellationToken = default) =>
+        dbContext.Events.AsNoTracking()
+            .Where(x => !x.IsArchived && x.EndDate >= fromDate)
+            .OrderBy(x => x.StartDate).ThenBy(x => x.Name)
+            .Take(take)
+            .Select(EventMapper.ToDtoExpression)
+            .ToListAsync(cancellationToken);
 }

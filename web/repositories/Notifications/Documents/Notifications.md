@@ -14,6 +14,7 @@
 | `MarkSentAsync(Guid id, DateTime sentAtUtc)` | `Sent` + `SentAt`. |
 | `MarkSkippedAsync(Guid id, string reason)` | `Skipped` med årsagen i `LastError` (fx ingen enheder). |
 | `ClearContentAsync(Guid id)` | Tømmer `Body` og `Url`. Bruges efter mails med engangslinks (invitation, nulstilling). |
+| `GetStatsAsync(DateTime sinceUtc)` | Dashboardet: sendt og påmindelser sendt siden `sinceUtc`, ventende nu, opgivet siden `sinceUtc` og den seneste opgivne besked. |
 | `MarkAttemptFailedAsync(Guid id, string error, DateTime? nextAttemptAtUtc)` | Tæller forsøget. Med et tidspunkt prøves igen da (`Pending`), uden opgives beskeden (`Failed`). |
 
 ## DedupKey

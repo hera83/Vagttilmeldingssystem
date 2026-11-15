@@ -7,6 +7,7 @@ using web.Managers.Planning.Interfaces;
 using web.Repositories.Assignments.Interfaces;
 using web.Repositories.Events.Dtos;
 using web.Repositories.Events.Interfaces;
+using web.Repositories.Profiles.Interfaces;
 using web.Repositories.Shifts.Dtos;
 using web.Repositories.Shifts.Interfaces;
 
@@ -16,6 +17,7 @@ public class PlanningManager(
     IEventRepository eventRepository,
     IShiftRepository shiftRepository,
     IAssignmentRepository assignmentRepository,
+    IProfileRepository profileRepository,
     IShiftUpdatesNotifier notifier,
     NotificationSignal notificationSignal) : IPlanningManager
 {
@@ -181,5 +183,40 @@ public class PlanningManager(
     {
         var startDate = DateOnly.FromDateTime(startUtc.ToDanishTime());
         return startDate >= item.StartDate && startDate <= item.EndDate;
+    }
+
+    public async Task<ParticipantListDto?> GetParticipantsAsync(Guid eventId, CancellationToken cancellationToken = default)
+    {
+        var item = await eventRepository.GetByIdAsync(eventId, cancellationToken);
+        if (item is null)
+        {
+            return null;
+        }
+
+        var participants = await assignmentRepository.GetActiveForEventAsync(eventId, cancellationToken);
+        var profiles = await profileRepository.GetByUserIdsAsync(participants.Select(x => x.UserId), cancellationToken);
+        return new ParticipantListDto
+        {
+            Event = item,
+            Rows = participants.Select(x =>
+            {
+                var profile = profiles.GetValueOrDefault(x.UserId);
+                return new ParticipantRowDto
+                {
+                    ShiftTitle = x.ShiftTitle,
+                    StartUtc = x.StartUtc,
+                    EndUtc = x.EndUtc,
+                    Name = string.IsNullOrWhiteSpace(profile?.FullName) ? x.DisplayName : profile.FullName,
+                    Email = x.UserName,
+                    Phone = profile?.Phone ?? string.Empty,
+                    ShirtSize = profile?.ShirtSize ?? string.Empty,
+                    DrinkTickets = profile?.DrinkTickets,
+                    TivoliSheets = profile?.TivoliSheets,
+                    ChildName = profile?.ChildName ?? string.Empty,
+                    ChildClass = profile?.ChildClass ?? string.Empty,
+                    Source = x.Source
+                };
+            }).ToList()
+        };
     }
 }

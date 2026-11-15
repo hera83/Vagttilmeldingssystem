@@ -25,4 +25,7 @@ public interface IPlanningManager
     Task<PlanningResult> DeleteShiftAsync(Guid shiftId, CancellationToken cancellationToken = default);
 
     Task<PlanningResult> DeleteEventAsync(Guid eventId, CancellationToken cancellationToken = default);
+
+    /// <summary>Deltagerlisten: alle aktive tildelinger i begivenheden med profilens stamdata, eller null, hvis begivenheden ikke findes. Kun admin.</summary>
+    Task<ParticipantListDto?> GetParticipantsAsync(Guid eventId, CancellationToken cancellationToken = default);
 }
