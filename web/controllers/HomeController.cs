@@ -2,19 +2,23 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using web.Infrastructure.Authentication;
-using web.Repositories.Profiles.Interfaces;
+using web.Managers.Enrollment.Interfaces;
 using web.ViewModels.Home;
 
 namespace web.Controllers;
 
-public class HomeController(IProfileRepository profileRepository) : Controller
+public class HomeController(IEnrollmentManager enrollmentManager) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var userId = UserPrincipalFactory.GetUserId(User);
-        var profileComplete = userId is not null && await profileRepository.IsCompleteAsync(userId.Value, cancellationToken);
-        return View(HomeViewModelMapper.ToIndexHomeViewModel(profileComplete));
+        if (UserPrincipalFactory.GetUserId(User) is not { } userId)
+        {
+            return Challenge();
+        }
+
+        var overview = await enrollmentManager.GetHomeAsync(userId, cancellationToken);
+        return View(overview.ToIndexHomeViewModel(DateTime.UtcNow));
     }
 
     [AllowAnonymous]

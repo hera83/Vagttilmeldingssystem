@@ -11,7 +11,7 @@ public class CreateAssignmentsDto
     public Guid? AssignedByUserId { get; set; }
 
     /// <summary>
-    /// true: kun åbne vagter i ikke-arkiverede begivenheder (brugerens egen tilmelding).
+    /// true: kun åbne vagter i ikke-arkiverede begivenheder, der ikke er startet (brugerens egen tilmelding).
     /// false: også kladder (administratorens forhåndstildeling).
     /// </summary>
     public bool OnlyOpen { get; set; }

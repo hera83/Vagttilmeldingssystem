@@ -1,0 +1,148 @@
+@model web.ViewModels.Signup.IndexSignupViewModel
+@{
+    ViewData["Title"] = "Ledige vagter";
+}
+<div class="page-header">
+    <div>
+        <h1>Ledige vagter</h1>
+        <p>Vælg en eller flere vagter, og tilmeld dig samlet. Pladserne fordeles efter først-til-mølle.</p>
+    </div>
+</div>
+
+@if (!Model.ProfileComplete)
+{
+    <div class="alert alert-warning" role="status">
+        <icon name="info" />
+        <p><strong>Udfyld din profil først.</strong> Du kan se vagterne, men først tilmelde dig, når din profil er udfyldt. <a asp-controller="Profile" asp-action="Index">Gå til Min profil</a></p>
+    </div>
+}
+
+@if (Model.Events.Count == 0)
+{
+    <div class="card empty-state">
+        <icon name="calendar" />
+        <h2>Der er ingen ledige vagter lige nu</h2>
+        <p>Når administratoren åbner for tilmelding, kommer vagterne her.</p>
+        <a class="btn btn-secondary" asp-controller="MyShifts" asp-action="Index"><icon name="calendar" />Se mine vagter</a>
+    </div>
+}
+else
+{
+    <section class="section" aria-labelledby="events-title">
+        <div class="section-header">
+            <h2 id="events-title">Aktuelle begivenheder</h2>
+            @if (Model.EventFilter is not null)
+            {
+                <a asp-action="Index">Vis alle begivenheder</a>
+            }
+        </div>
+        <div class="event-cards">
+            @foreach (var ev in Model.Events)
+            {
+                <a class="event-card @(ev.IsSelected ? "is-selected" : "")" asp-action="Index" asp-route-eventId="@ev.EventId" aria-current="@(ev.IsSelected ? "true" : null)">
+                    <span class="item-main">
+                        <strong>@ev.Name</strong>
+                        <span class="meta">
+                            <span><icon name="calendar" />@ev.DateText</span>
+                            <span><icon name="map-pin" />@ev.Location</span>
+                        </span>
+                    </span>
+                    <span class="badge @(ev.FreeShiftCount > 0 ? "badge-open" : "badge-neutral")">@ev.FreeShiftCount ledige</span>
+                </a>
+            }
+        </div>
+    </section>
+
+    <form asp-action="Enroll" method="post" class="signup-layout" data-signup data-profile-complete="@(Model.ProfileComplete ? "true" : "false")">
+        <input type="hidden" asp-for="EventFilter" />
+        <div class="signup-main">
+            <div asp-validation-summary="ModelOnly" role="alert"></div>
+            <h2 class="list-title">Vagter (@Model.Shifts.Count)</h2>
+            <div class="table-wrap">
+                <table class="table table-cards signup-table">
+                    <thead>
+                        <tr>
+                            <th scope="col"><span class="visually-hidden">Vælg</span></th>
+                            <th scope="col">Vagt</th>
+                            <th scope="col">Dato</th>
+                            <th scope="col">Tid</th>
+                            <th scope="col">Sted</th>
+                            <th scope="col">Ledige pladser</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var shift in Model.Shifts)
+                        {
+                            var inputId = $"shift-{shift.ShiftId:N}";
+                            <tr class="@(shift.Selected ? "is-selected" : "")">
+                                <td class="cell-check">
+                                    @if (shift.IsMine)
+                                    {
+                                        <span class="visually-hidden">Du er på vagten</span>
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox" id="@inputId" name="ShiftIds" value="@shift.ShiftId" checked="@shift.Selected" disabled="@shift.IsFull"
+                                               data-title="@shift.Title" data-when="@shift.DateText @shift.TimeText" />
+                                    }
+                                </td>
+                                <td class="cell-main">
+                                    <label for="@(shift.IsMine ? null : inputId)">
+                                        <strong>@shift.Title</strong>
+                                        <span class="muted small">@shift.EventName</span>
+                                    </label>
+                                    @if (!string.IsNullOrWhiteSpace(shift.Description))
+                                    {
+                                        <span class="muted small shift-description">@shift.Description</span>
+                                    }
+                                </td>
+                                <td data-label="Dato" class="nowrap">@shift.DateText</td>
+                                <td data-label="Tid" class="nowrap">@shift.TimeText</td>
+                                <td data-label="Sted">@shift.Location</td>
+                                <td data-label="Ledige pladser">
+                                    @if (shift.IsMine)
+                                    {
+                                        <span class="badge badge-info"><icon name="check" />Du er på</span>
+                                    }
+                                    else if (shift.IsFull)
+                                    {
+                                        <span class="badge badge-neutral"><icon name="lock" />Fuld</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-open">@shift.Free af @shift.Capacity ledige</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <aside class="card signup-summary" aria-labelledby="summary-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="check-circle" /></span>
+                <div>
+                    <h2 id="summary-title">Valgte vagter (<span data-selected-count>@Model.SelectedCount</span>)</h2>
+                    <p>Vagterne tilmeldes samlet: du får dem alle eller ingen.</p>
+                </div>
+            </div>
+            <ul class="summary-list" data-selected-list aria-live="polite">
+                @foreach (var shift in Model.Shifts.Where(x => x.Selected))
+                {
+                    <li><strong>@shift.Title</strong><span class="muted small">@shift.DateText @shift.TimeText</span></li>
+                }
+            </ul>
+            <p class="muted small summary-empty" data-selected-empty hidden="@(Model.SelectedCount > 0)">Sæt flueben ved de vagter, du vil tage.</p>
+            <button type="submit" class="btn btn-primary btn-block" data-submit disabled="@(!Model.ProfileComplete)">
+                <icon name="check" />Bekræft tilmelding
+            </button>
+            <p class="muted small mt-1 summary-note">Dine vagter er låst til dig, når du er tilmeldt. Bliver du forhindret, så kontakt administratoren.</p>
+        </aside>
+    </form>
+}
+
+@section Scripts {
+    <script src="~/js/signup.js" asp-append-version="true"></script>
+}

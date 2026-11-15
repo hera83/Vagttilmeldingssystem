@@ -12,6 +12,12 @@ public interface IShiftRepository
 
     Task<bool> AnyForEventAsync(Guid eventId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Til forældrene: kun åbne vagter i ikke-arkiverede begivenheder, der ikke er startet endnu, sorteret efter starttid.
+    /// Filtreringen sker i selve forespørgslen, så kladder aldrig forlader databasen (krav K10).
+    /// </summary>
+    Task<List<OpenShiftDto>> GetOpenAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
+
     /// <summary>Antal kladder og åbne vagter pr. begivenhed (begivenheder uden vagter er ikke med).</summary>
     Task<List<EventShiftCountsDto>> GetStatusCountsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default);
 

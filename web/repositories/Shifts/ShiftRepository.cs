@@ -31,6 +31,24 @@ public class ShiftRepository(WebDbContext dbContext) : IShiftRepository
     public Task<bool> AnyForEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
         dbContext.Shifts.AnyAsync(x => x.EventId == eventId, cancellationToken);
 
+    public Task<List<OpenShiftDto>> GetOpenAsync(DateTime nowUtc, CancellationToken cancellationToken = default) =>
+        (from s in dbContext.Shifts.AsNoTracking()
+         join e in dbContext.Events on s.EventId equals e.Id
+         where s.Status == ShiftStatus.Open && !e.IsArchived && s.StartUtc > nowUtc
+         orderby s.StartUtc, s.Title
+         select new OpenShiftDto
+         {
+             Id = s.Id,
+             Title = s.Title,
+             Description = s.Description,
+             StartUtc = s.StartUtc,
+             EndUtc = s.EndUtc,
+             Capacity = s.Capacity,
+             EventId = e.Id,
+             EventName = e.Name,
+             EventLocation = e.Location
+         }).ToListAsync(cancellationToken);
+
     public Task<List<EventShiftCountsDto>> GetStatusCountsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default)
     {
         var ids = eventIds.Distinct().ToList();

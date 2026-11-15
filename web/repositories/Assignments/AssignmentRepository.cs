@@ -28,8 +28,9 @@ public class AssignmentRepository(WebDbContext dbContext) : IAssignmentRepositor
                 from s in dbContext.Shifts
                 join e in dbContext.Events on s.EventId equals e.Id
                 where ids.Contains(s.Id)
-                select new { s.Id, s.Capacity, s.Status, EventArchived = e.IsArchived })
+                select new { s.Id, s.Capacity, s.Status, s.StartUtc, EventArchived = e.IsArchived })
             .ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
 
         var activeCounts = await dbContext.Assignments
             .Where(a => ids.Contains(a.ShiftId) && a.IsActive)
@@ -47,7 +48,7 @@ public class AssignmentRepository(WebDbContext dbContext) : IAssignmentRepositor
             var shift = shifts.FirstOrDefault(x => x.Id == id);
             AssignFailureReason? reason =
                 shift is null ? AssignFailureReason.NotFound
-                : dto.OnlyOpen && (shift.Status != ShiftStatus.Open || shift.EventArchived) ? AssignFailureReason.NotOpen
+                : dto.OnlyOpen && (shift.Status != ShiftStatus.Open || shift.EventArchived || shift.StartUtc <= now) ? AssignFailureReason.NotOpen
                 : alreadyMine.Contains(id) ? AssignFailureReason.AlreadyAssigned
                 : activeCounts.GetValueOrDefault(id) >= shift.Capacity ? AssignFailureReason.Full
                 : null;

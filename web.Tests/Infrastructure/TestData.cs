@@ -50,6 +50,15 @@ public static class TestData
         await db.SaveChangesAsync();
     }
 
+    /// <summary>Giver brugeren en komplet profil (krav for tilmelding).</summary>
+    public static Task CompleteProfileAsync(this WebAppFactory factory, Guid userId) =>
+        factory.WithServiceAsync<web.Repositories.Profiles.Interfaces.IProfileRepository, web.Repositories.Profiles.Dtos.ProfileDto>(r =>
+            r.SaveAsync(userId, new web.Repositories.Profiles.Dtos.SaveProfileDto
+            {
+                FullName = "Test Forælder", Address = "Skolevej 1", Phone = "12345678", ShirtSize = "M",
+                DrinkTickets = 2, TivoliSheets = 1, ChildName = "Test Barn", ChildClass = "1.A"
+            }));
+
     /// <summary>Opretter mange brugere hurtigt (uden at hashe en rigtig adgangskode). De kan ikke logge ind.</summary>
     public static async Task<List<Guid>> CreateBulkUsersAsync(this WebAppFactory factory, int count)
     {

@@ -18,6 +18,8 @@ using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
 using web.Managers.Assignments;
 using web.Managers.Assignments.Interfaces;
+using web.Managers.Enrollment;
+using web.Managers.Enrollment.Interfaces;
 using web.Managers.Members;
 using web.Managers.Members.Interfaces;
 using web.Managers.Planning;
@@ -142,6 +144,7 @@ builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 builder.Services.AddScoped<IMemberManager, MemberManager>();
 builder.Services.AddScoped<IPlanningManager, PlanningManager>();
 builder.Services.AddScoped<IAssignmentManager, AssignmentManager>();
+builder.Services.AddScoped<IEnrollmentManager, EnrollmentManager>();
 
 // Eksterne services
 

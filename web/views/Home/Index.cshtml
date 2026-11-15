@@ -19,6 +19,46 @@
 }
 
 <div class="grid grid-2">
+    <section class="card" aria-labelledby="next-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="calendar" /></span>
+            <div>
+                <h2 id="next-title">Din næste vagt</h2>
+                <p>Du har @Model.UpcomingCount kommende @(Model.UpcomingCount == 1 ? "vagt" : "vagter").</p>
+            </div>
+        </div>
+        @if (Model.HasNextShift)
+        {
+            <a class="item-row mb-1" asp-controller="MyShifts" asp-action="Details" asp-route-id="@Model.NextShiftId">
+                <span class="item-main">
+                    <strong>@Model.NextShiftEventName: @Model.NextShiftTitle</strong>
+                    <span class="meta">
+                        <span><icon name="calendar" />@Model.NextShiftDateText</span>
+                        <span><icon name="clock" />@Model.NextShiftTimeText</span>
+                        <span><icon name="map-pin" />@Model.NextShiftLocation</span>
+                    </span>
+                </span>
+                <icon name="chevron-right" class="item-chevron" />
+            </a>
+        }
+        else
+        {
+            <p class="muted">Du har ingen kommende vagter.</p>
+        }
+        <a class="btn btn-secondary" asp-controller="MyShifts" asp-action="Index"><icon name="calendar" />Mine vagter</a>
+    </section>
+
+    <section class="card" aria-labelledby="available-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="users" /></span>
+            <div>
+                <h2 id="available-title">Ledige vagter</h2>
+                <p>@(Model.AvailableCount == 0 ? "Der er ingen ledige vagter lige nu." : $"{Model.AvailableCount} {(Model.AvailableCount == 1 ? "vagt har" : "vagter har")} ledige pladser.")</p>
+            </div>
+        </div>
+        <a class="btn btn-primary" asp-controller="Signup" asp-action="Index"><icon name="check-circle" />Se ledige vagter</a>
+    </section>
+
     <section class="card" aria-labelledby="profile-title">
         <div class="card-header">
             <span class="card-icon"><icon name="user" /></span>
@@ -34,7 +74,7 @@
     {
         <section class="card" aria-labelledby="admin-title">
             <div class="card-header">
-                <span class="card-icon"><icon name="users" /></span>
+                <span class="card-icon"><icon name="shield" /></span>
                 <div>
                     <h2 id="admin-title">Administration</h2>
                     <p>Opret begivenheder og vagter, og administrér forældre og administratorer.</p>
