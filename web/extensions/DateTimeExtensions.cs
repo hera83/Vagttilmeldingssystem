@@ -28,9 +28,15 @@ public static class DateTimeExtensions
         return TimeZoneInfo.ConvertTimeToUtc(unspecified, DanishTimeZone);
     }
 
+    // Kolon står i anførselstegn, fordi da-DK ellers bruger punktum som tidsseparator ("17.00"). PDF og mockups bruger "17:00".
+
     /// <summary>Fx "fre. 14. mar. 2025 kl. 17:00".</summary>
     public static string ToDanishDateTimeText(this DateTime utc) =>
-        utc.ToDanishTime().ToString("ddd d. MMM yyyy 'kl.' HH:mm", Danish);
+        utc.ToDanishTime().ToString("ddd d. MMM yyyy 'kl.' HH':'mm", Danish);
+
+    /// <summary>Fx "14.03.2025 17:00" (kort, til tabeller).</summary>
+    public static string ToDanishShortDateTimeText(this DateTime utc) =>
+        utc.ToDanishTime().ToString("dd'.'MM'.'yyyy HH':'mm", Danish);
 
     /// <summary>Fx "fre. 14. mar. 2025".</summary>
     public static string ToDanishDateText(this DateTime utc) =>
@@ -38,5 +44,5 @@ public static class DateTimeExtensions
 
     /// <summary>Fx "17:00".</summary>
     public static string ToDanishTimeText(this DateTime utc) =>
-        utc.ToDanishTime().ToString("HH:mm", Danish);
+        utc.ToDanishTime().ToString("HH':'mm", Danish);
 }

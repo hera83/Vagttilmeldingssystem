@@ -15,8 +15,12 @@ using web.Data.Seeds;
 using web.Infrastructure.Authentication;
 using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
+using web.Managers.Members;
+using web.Managers.Members.Interfaces;
 using web.Repositories.Logs;
 using web.Repositories.Logs.Interfaces;
+using web.Repositories.Profiles;
+using web.Repositories.Profiles.Interfaces;
 using web.Repositories.Users;
 using web.Repositories.Users.Dtos;
 using web.Repositories.Users.Interfaces;
@@ -42,7 +46,23 @@ builder.Host.UseSerilog((_, _, loggerConfiguration) => loggerConfiguration
 
 // Views i views/ (små bogstaver) og anti-forgery på alle formularer (views.md)
 builder.Services.AddControllersWithViews(options =>
-    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+
+    // Danske tekster, når en værdi slet ikke kan læses (fx bogstaver i et talfelt). controllers.md regel 32.
+    var messages = options.ModelBindingMessageProvider;
+    messages.SetAttemptedValueIsInvalidAccessor((value, field) => $"Værdien »{value}« er ikke gyldig for {field}.");
+    messages.SetMissingBindRequiredValueAccessor(field => $"Der mangler en værdi for {field}.");
+    messages.SetMissingKeyOrValueAccessor(() => "Der mangler en værdi.");
+    messages.SetMissingRequestBodyRequiredValueAccessor(() => "Der mangler indhold i forespørgslen.");
+    messages.SetNonPropertyAttemptedValueIsInvalidAccessor(value => $"Værdien »{value}« er ikke gyldig.");
+    messages.SetNonPropertyUnknownValueIsInvalidAccessor(() => "Værdien er ikke gyldig.");
+    messages.SetNonPropertyValueMustBeANumberAccessor(() => "Feltet skal være et tal.");
+    messages.SetUnknownValueIsInvalidAccessor(field => $"Værdien er ikke gyldig for {field}.");
+    messages.SetValueIsInvalidAccessor(value => $"Værdien »{value}« er ikke gyldig.");
+    messages.SetValueMustBeANumberAccessor(field => $"{field} skal være et tal.");
+    messages.SetValueMustNotBeNullAccessor(_ => "Feltet skal udfyldes.");
+});
 builder.Services.Configure<RazorViewEngineOptions>(options =>
 {
     options.ViewLocationFormats.Clear();
@@ -97,8 +117,10 @@ builder.Services.AddAuthorization(options =>
 // Repositories
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 
 // Managers
+builder.Services.AddScoped<IMemberManager, MemberManager>();
 
 // Eksterne services
 

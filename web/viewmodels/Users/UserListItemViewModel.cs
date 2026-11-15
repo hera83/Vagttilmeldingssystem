@@ -7,6 +7,7 @@ public class UserListItemViewModel
     public string DisplayName { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
     public bool IsActive { get; set; }
+    public bool HasCompleteProfile { get; set; }
     public string LastLoginText { get; set; } = string.Empty;
     public bool IsCurrentUser { get; set; }
 }

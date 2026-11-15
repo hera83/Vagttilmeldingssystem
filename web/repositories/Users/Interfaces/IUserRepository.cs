@@ -16,6 +16,9 @@ public interface IUserRepository
 
     Task<UserDto?> UpdateAsync(Guid id, UpdateUserDto dto, CancellationToken cancellationToken = default);
 
+    /// <summary>Ændrer brugernavnet (e-mailen). Skifter SecurityStamp, så brugeren skal logge ind med den nye e-mail.</summary>
+    Task<ChangeUserNameResult> ChangeUserNameAsync(Guid id, string newUserName, CancellationToken cancellationToken = default);
+
     Task<bool> SetPasswordAsync(Guid id, string newPassword, CancellationToken cancellationToken = default);
 
     Task<UserDto?> ChangePasswordAsync(Guid id, string currentPassword, string newPassword, CancellationToken cancellationToken = default);

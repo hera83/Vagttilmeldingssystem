@@ -82,6 +82,32 @@ public class UserRepository(WebDbContext dbContext) : IUserRepository
         return entity.ToDto();
     }
 
+    public async Task<ChangeUserNameResult> ChangeUserNameAsync(Guid id, string newUserName, CancellationToken cancellationToken = default)
+    {
+        var userName = newUserName.Trim();
+        var entity = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null)
+        {
+            return ChangeUserNameResult.NotFound;
+        }
+
+        if (entity.UserName == userName)
+        {
+            return ChangeUserNameResult.Unchanged;
+        }
+
+        // NOCASE: en anden bruger med samme e-mail i andre bogstaver tæller også.
+        if (await dbContext.Users.AnyAsync(x => x.Id != id && x.UserName == userName, cancellationToken))
+        {
+            return ChangeUserNameResult.Taken;
+        }
+
+        entity.UserName = userName;
+        entity.SecurityStamp = Guid.NewGuid();
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ChangeUserNameResult.Success;
+    }
+
     public async Task<bool> SetPasswordAsync(Guid id, string newPassword, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

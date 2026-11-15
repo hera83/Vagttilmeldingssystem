@@ -1,14 +1,21 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using web.Infrastructure.Authentication;
+using web.Repositories.Profiles.Interfaces;
 using web.ViewModels.Home;
 
 namespace web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(IProfileRepository profileRepository) : Controller
 {
     [HttpGet]
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        var userId = UserPrincipalFactory.GetUserId(User);
+        var profileComplete = userId is not null && await profileRepository.IsCompleteAsync(userId.Value, cancellationToken);
+        return View(HomeViewModelMapper.ToIndexHomeViewModel(profileComplete));
+    }
 
     [AllowAnonymous]
     [IgnoreAntiforgeryToken]

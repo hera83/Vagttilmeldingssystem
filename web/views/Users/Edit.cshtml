@@ -15,6 +15,13 @@
         <div asp-validation-summary="ModelOnly"></div>
 
         <div class="field">
+            <label asp-for="UserName" class="required"></label>
+            <input asp-for="UserName" type="email" autocomplete="off" />
+            <span class="help">Ændres e-mailen, bliver brugeren logget ud og skal logge ind med den nye e-mail.</span>
+            <span asp-validation-for="UserName"></span>
+        </div>
+
+        <div class="field">
             <label asp-for="DisplayName" class="required"></label>
             <input asp-for="DisplayName" autocomplete="off" />
             <span asp-validation-for="DisplayName"></span>

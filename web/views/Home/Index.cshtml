@@ -1,3 +1,4 @@
+@model web.ViewModels.Home.IndexHomeViewModel
 @{
     ViewData["Title"] = "Forside";
     var isAdmin = User.IsInRole(UserClaimTypes.AdminRole);
@@ -9,16 +10,24 @@
     </div>
 </div>
 
+@if (!Model.ProfileComplete)
+{
+    <div class="alert alert-warning" role="status">
+        <icon name="info" />
+        <p><strong>Udfyld din profil.</strong> Du kan først tilmelde dig vagter, når din profil er udfyldt. <a asp-controller="Profile" asp-action="Index">Gå til Min profil</a></p>
+    </div>
+}
+
 <div class="grid grid-2">
-    <section class="card" aria-labelledby="account-title">
+    <section class="card" aria-labelledby="profile-title">
         <div class="card-header">
-            <span class="card-icon"><icon name="key" /></span>
+            <span class="card-icon"><icon name="user" /></span>
             <div>
-                <h2 id="account-title">Din konto</h2>
-                <p>Skift din adgangskode, så den kun er kendt af dig.</p>
+                <h2 id="profile-title">Min profil</h2>
+                <p>Dine kontaktoplysninger, trøjestørrelse, billetter og barnets klasse.</p>
             </div>
         </div>
-        <a class="btn btn-secondary" asp-controller="Account" asp-action="ChangePassword"><icon name="key" />Skift adgangskode</a>
+        <a class="btn btn-secondary" asp-controller="Profile" asp-action="Index"><icon name="user" />Gå til Min profil</a>
     </section>
 
     @if (isAdmin)

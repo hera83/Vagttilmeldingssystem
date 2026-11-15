@@ -26,9 +26,9 @@ else
             <thead>
                 <tr>
                     <th scope="col">Navn</th>
-                    <th scope="col">E-mail</th>
                     <th scope="col">Rolle</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Profil</th>
                     <th scope="col">Sidste login</th>
                     <th scope="col"><span class="visually-hidden">Handlinger</span></th>
                 </tr>
@@ -37,8 +37,7 @@ else
                 @foreach (var user in Model.Users)
                 {
                     <tr>
-                        <td class="cell-main"><strong>@user.DisplayName</strong>@if (user.IsCurrentUser){<span class="muted small"> (dig)</span>}</td>
-                        <td data-label="E-mail">@user.UserName</td>
+                        <td class="cell-main"><strong>@user.DisplayName</strong>@if (user.IsCurrentUser){<span class="muted small"> (dig)</span>}<br /><span class="muted small">@user.UserName</span></td>
                         <td data-label="Rolle">
                             @if (user.IsAdmin)
                             {
@@ -59,14 +58,19 @@ else
                                 <span class="badge badge-draft"><icon name="lock" />Deaktiveret</span>
                             }
                         </td>
-                        <td data-label="Sidste login">@user.LastLoginText</td>
+                        <td data-label="Profil">
+                            <a asp-action="Profile" asp-route-id="@user.Id" class="badge @(user.HasCompleteProfile ? "badge-success" : "badge-warning")">
+                                <icon name="@(user.HasCompleteProfile ? "check" : "alert-triangle")" />@(user.HasCompleteProfile ? "Udfyldt" : "Mangler")<span class="visually-hidden"> – se profilen for @user.DisplayName</span>
+                            </a>
+                        </td>
+                        <td data-label="Sidste login" class="nowrap">@user.LastLoginText</td>
                         <td class="actions">
-                            <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@user.Id"><icon name="edit" />Ret<span class="visually-hidden"> @user.DisplayName</span></a>
-                            <a class="btn btn-ghost btn-sm" asp-action="ResetPassword" asp-route-id="@user.Id"><icon name="key" />Ny adgangskode<span class="visually-hidden"> til @user.DisplayName</span></a>
+                            <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@user.Id" title="Ret"><icon name="edit" /><span class="btn-label">Ret</span><span class="visually-hidden"> @user.DisplayName</span></a>
+                            <a class="btn btn-ghost btn-sm" asp-action="ResetPassword" asp-route-id="@user.Id" title="Ny adgangskode"><icon name="key" /><span class="btn-label">Ny adgangskode</span><span class="visually-hidden"> til @user.DisplayName</span></a>
                             @if (!user.IsCurrentUser)
                             {
                                 <form asp-action="Delete" asp-route-id="@user.Id" method="post" data-confirm="Vil du slette @user.DisplayName? Det kan ikke fortrydes.">
-                                    <button type="submit" class="btn btn-danger btn-sm"><icon name="trash" />Slet<span class="visually-hidden"> @user.DisplayName</span></button>
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Slet"><icon name="trash" /><span class="btn-label">Slet</span><span class="visually-hidden"> @user.DisplayName</span></button>
                                 </form>
                             }
                         </td>

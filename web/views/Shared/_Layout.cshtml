@@ -27,6 +27,7 @@
             {
                 <nav class="topnav" aria-label="Hovedmenu">
                     <a asp-controller="Home" asp-action="Index" aria-current="@Current("Home")"><icon name="home" />Forside</a>
+                    <a asp-controller="Profile" asp-action="Index" aria-current="@Current("Profile")"><icon name="user" />Min profil</a>
                 </nav>
                 <div class="user-menu">
                     <a class="user-chip" asp-controller="Account" asp-action="ChangePassword" title="Skift adgangskode">
@@ -67,7 +68,7 @@
     {
         <nav class="bottomnav" aria-label="Menu">
             <a asp-controller="Home" asp-action="Index" aria-current="@Current("Home")"><icon name="home" /><span>Forside</span></a>
-            <a asp-controller="Account" asp-action="ChangePassword" aria-current="@Current("Account")"><icon name="user" /><span>Konto</span></a>
+            <a asp-controller="Profile" asp-action="Index" aria-current="@Current("Profile")"><icon name="user" /><span>Profil</span></a>
         </nav>
     }
 

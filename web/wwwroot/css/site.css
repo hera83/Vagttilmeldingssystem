@@ -197,16 +197,21 @@ input[readonly] { background: var(--bg); color: var(--text-muted); }
 .badge-danger { background: var(--danger-soft); color: var(--danger); }
 .badge-info { background: var(--primary-soft); color: var(--primary-hover); }
 .badge-neutral { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+a.badge { text-decoration: none; }
+a.badge:hover { filter: brightness(.95); text-decoration: underline; }
 
 /* ---------- Tabeller ---------- */
-.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; }
 table.table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: .75rem .9rem; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border); }
 .table thead th { background: #F1F5FB; font-size: .85rem; font-weight: 700; color: var(--text-muted); }
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: #FAFCFF; }
-.table .actions { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-end; }
-.table .actions form { margin: 0; }
+.table td.actions { text-align: right; white-space: nowrap; }
+.table td.actions > * { vertical-align: middle; margin: .15rem 0 .15rem .35rem; }
+.table td.actions form { display: inline-block; }
+/* Knapper i tabeller viser kun ikonet på store skærme (teksten er der stadig for skærmlæsere og vises på mobil). */
+.table td.actions .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: var(--text-muted); }
 .small { font-size: .9rem; }
@@ -291,7 +296,9 @@ table.table { width: 100%; border-collapse: collapse; }
     .table-cards td::before { content: attr(data-label); font-weight: 700; color: var(--text-muted); text-align: left; }
     .table-cards td.cell-main { display: block; text-align: left; font-size: 1.05rem; }
     .table-cards td.cell-main::before { content: none; }
-    .table-cards td.actions { justify-content: flex-start; padding-top: .5rem; }
+    .table-cards td.actions { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-start; padding-top: .5rem; white-space: normal; text-align: left; }
+    .table-cards td.actions > * { margin: 0; }
+    .table-cards td.actions .btn-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
     .table-cards td.actions::before { content: none; }
 }
 
@@ -303,3 +310,4 @@ table.table { width: 100%; border-collapse: collapse; }
 .mt-1 { margin-top: 1rem; }
 .mt-2 { margin-top: 2rem; }
 .mb-0 { margin-bottom: 0; }
+.nowrap { white-space: nowrap; }

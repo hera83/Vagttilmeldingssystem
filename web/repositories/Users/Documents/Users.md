@@ -14,6 +14,7 @@
 | `ValidateCredentialsAsync(string userName, string password)` | Aktiv bruger med korrekt adgangskode, ellers `null`. Sætter `LastLoginAt` og opgraderer hashet, hvis `PasswordHasher` beder om det. |
 | `CreateAsync(CreateUserDto dto)` | Opretter og returnerer brugeren, eller `null`, hvis brugernavnet findes. |
 | `UpdateAsync(Guid id, UpdateUserDto dto)` | Opdaterer, eller `null`. Skifter `SecurityStamp`, hvis `IsActive` ændres. |
+| `ChangeUserNameAsync(Guid id, string newUserName)` | Admin ændrer brugerens e-mail (brugernavn). Returnerer `Success`, `Unchanged`, `NotFound` eller `Taken`. Skifter `SecurityStamp`, så brugeren logges ud og skal bruge den nye e-mail. |
 | `SetPasswordAsync(Guid id, string newPassword)` | Admin sætter ny adgangskode. Skifter `SecurityStamp`. `false`, hvis brugeren ikke findes. |
 | `ChangePasswordAsync(Guid id, string currentPassword, string newPassword)` | Brugerens egen ændring. `null`, hvis den nuværende adgangskode er forkert. Skifter `SecurityStamp`. |
 | `DeleteAsync(Guid id)` | `true`, hvis rækken fandtes. |

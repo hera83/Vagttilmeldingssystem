@@ -1,19 +1,35 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using web.Infrastructure.Authentication;
+using web.Managers.Members.Interfaces;
+using web.Repositories.Users.Dtos;
 using web.Repositories.Users.Interfaces;
 using web.ViewModels.Users;
 
 namespace web.Controllers;
 
 [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
-public class UsersController(IUserRepository userRepository) : Controller
+public class UsersController(IUserRepository userRepository, IMemberManager memberManager) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var users = await userRepository.GetAllAsync(cancellationToken);
-        return View(users.ToIndexUsersViewModel(UserPrincipalFactory.GetUserId(User)));
+        var members = await memberManager.GetMembersAsync(cancellationToken);
+        return View(members.ToIndexUsersViewModel(UserPrincipalFactory.GetUserId(User)));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Profile(Guid id, CancellationToken cancellationToken)
+    {
+        var member = await memberManager.GetMemberAsync(id, cancellationToken);
+        if (member is null)
+        {
+            return NotFound();
+        }
+
+        return View(member.ToProfileUsersViewModel());
     }
 
     [HttpGet]
@@ -63,6 +79,7 @@ public class UsersController(IUserRepository userRepository) : Controller
 
         // En administrator kan ikke deaktivere sig selv eller fjerne sin egen admin-rettighed.
         var isCurrentUser = UserPrincipalFactory.GetUserId(User) == id;
+        model.IsCurrentUser = isCurrentUser;
         if (isCurrentUser && (!model.IsActive || !model.IsAdmin))
         {
             ModelState.AddModelError(string.Empty, "Du kan ikke deaktivere dig selv eller fjerne din egen admin-rettighed.");
@@ -70,9 +87,20 @@ public class UsersController(IUserRepository userRepository) : Controller
 
         if (!ModelState.IsValid)
         {
-            model.UserName = existing.UserName;
-            model.IsCurrentUser = isCurrentUser;
             return View(model);
+        }
+
+        // E-mailen (brugernavnet) ændres for sig, så "findes allerede" kan vises ved feltet.
+        var userNameResult = await userRepository.ChangeUserNameAsync(id, model.UserName, cancellationToken);
+        if (userNameResult == ChangeUserNameResult.Taken)
+        {
+            ModelState.AddModelError(nameof(model.UserName), "Der findes allerede en bruger med denne e-mail.");
+            return View(model);
+        }
+
+        if (userNameResult == ChangeUserNameResult.NotFound)
+        {
+            return NotFound();
         }
 
         var updated = await userRepository.UpdateAsync(id, model.ToUpdateUserDto(), cancellationToken);
@@ -81,7 +109,15 @@ public class UsersController(IUserRepository userRepository) : Controller
             return NotFound();
         }
 
-        TempData["Success"] = $"Brugeren {updated.DisplayName} er gemt.";
+        // Ny e-mail på egen konto giver ny security stamp: log ind igen, så administratoren ikke bliver smidt ud.
+        if (isCurrentUser && userNameResult == ChangeUserNameResult.Success)
+        {
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, UserPrincipalFactory.Create(updated));
+        }
+
+        TempData["Success"] = userNameResult == ChangeUserNameResult.Success
+            ? $"Brugeren {updated.DisplayName} er gemt. Brugeren skal fremover logge ind med {updated.UserName}."
+            : $"Brugeren {updated.DisplayName} er gemt.";
         return RedirectToAction(nameof(Index));
     }
 

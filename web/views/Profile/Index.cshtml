@@ -1,0 +1,123 @@
+@model web.ViewModels.Profile.IndexProfileViewModel
+@{
+    ViewData["Title"] = "Min profil";
+}
+<div class="page-header">
+    <div>
+        <h1>Min profil</h1>
+        <p>Se og opdatér dine oplysninger. De bruges til vagttilmelding og den praktiske planlægning, og kun du og administratorerne kan se dem.</p>
+    </div>
+</div>
+
+@if (!Model.IsComplete)
+{
+    <div class="alert alert-warning" role="status">
+        <icon name="info" />
+        <p><strong>Udfyld alle felter med *.</strong> Du kan først tilmelde dig vagter, når din profil er udfyldt.</p>
+    </div>
+}
+
+<div class="grid grid-sidebar">
+    <section class="card" aria-labelledby="personal-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="user" /></span>
+            <div>
+                <h2 id="personal-title">Personlige oplysninger</h2>
+                <p>Felter med * skal udfyldes.</p>
+            </div>
+        </div>
+
+        <form asp-action="Index" method="post" novalidate class="form-wide">
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <div class="form-row">
+                <div class="field">
+                    <label asp-for="FullName" class="required"></label>
+                    <input asp-for="FullName" autocomplete="name" />
+                    <span asp-validation-for="FullName"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Phone" class="required"></label>
+                    <input asp-for="Phone" type="tel" autocomplete="tel" />
+                    <span class="help">Bruges til hurtig kontakt omkring dine vagter.</span>
+                    <span asp-validation-for="Phone"></span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label asp-for="Address" class="required"></label>
+                <input asp-for="Address" autocomplete="street-address" />
+                <span asp-validation-for="Address"></span>
+            </div>
+
+            <div class="field">
+                <label for="Email">E-mailadresse</label>
+                <input id="Email" type="email" value="@Model.Email" readonly aria-describedby="email-help" />
+                <span class="help" id="email-help">Din e-mail er også dit brugernavn. Kontakt administratoren for at ændre den.</span>
+            </div>
+
+            <div class="form-row">
+                <div class="field">
+                    <label asp-for="ShirtSize" class="required"></label>
+                    <select asp-for="ShirtSize">
+                        <option value="">Vælg størrelse</option>
+                        @foreach (var size in Model.ShirtSizeOptions)
+                        {
+                            <option value="@size" selected="@(size == Model.ShirtSize)">@size</option>
+                        }
+                    </select>
+                    <span class="help">Bruges ved bestilling af t-shirts til arrangementer.</span>
+                    <span asp-validation-for="ShirtSize"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="DrinkTickets" class="required"></label>
+                    <input asp-for="DrinkTickets" type="number" min="0" max="50" step="1" inputmode="numeric" />
+                    <span class="help">Antal stk., du ønsker. 0, hvis du ikke ønsker nogen.</span>
+                    <span asp-validation-for="DrinkTickets"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="TivoliSheets" class="required"></label>
+                    <select asp-for="TivoliSheets">
+                        <option value="">Vælg antal ark</option>
+                        @for (var sheets = 0; sheets <= 2; sheets++)
+                        {
+                            <option value="@sheets" selected="@(Model.TivoliSheets == sheets)">@sheets ark</option>
+                        }
+                    </select>
+                    <span class="help">Højst 2 ark.</span>
+                    <span asp-validation-for="TivoliSheets"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="field">
+                    <label asp-for="ChildName" class="required"></label>
+                    <input asp-for="ChildName" autocomplete="off" />
+                    <span asp-validation-for="ChildName"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="ChildClass" class="required"></label>
+                    <input asp-for="ChildClass" autocomplete="off" placeholder="Fx 6.A" />
+                    <span asp-validation-for="ChildClass"></span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><icon name="check" />Gem ændringer</button>
+            </div>
+        </form>
+    </section>
+
+    <div>
+        <section class="card" aria-labelledby="security-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="lock" /></span>
+                <div>
+                    <h2 id="security-title">Sikker konto</h2>
+                    <p>Hold din konto sikker.</p>
+                </div>
+            </div>
+            <a class="btn btn-secondary btn-block" asp-controller="Account" asp-action="ChangePassword"><icon name="key" />Skift adgangskode</a>
+        </section>
+    </div>
+</div>
