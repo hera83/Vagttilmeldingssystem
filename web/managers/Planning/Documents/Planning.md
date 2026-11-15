@@ -9,6 +9,8 @@
 | Metode | Beskrivelse |
 |---|---|
 | `GetEventAsync(Guid eventId)` | Begivenheden, eller `null`. |
+| `SearchEventsAsync(EventSearchDto search)` | Begivenhederne fra søgningen med antal kladder og åbne vagter pr. begivenhed. |
+| `OpenShiftsAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId)` | **Frigivelsen.** `EventNotFound`, `EventArchived` eller `Success` med de vagter, der blev åbnet nu. Tom liste, hvis de allerede var åbne. Forhåndstildelinger bevares, og kun de resterende pladser bliver ledige. |
 | `GetEventOverviewAsync(Guid eventId, ShiftStatus? statusFilter)` | Begivenheden med vagterne (evt. kun én status), antal kladder/åbne og antal besatte pladser pr. vagt. `null`, hvis den ikke findes. |
 | `GetShiftEditorAsync(Guid shiftId)` | Vagten og dens begivenhed (til ret-formularen). |
 | `CreateShiftAsync(Guid eventId, CreateShiftDto dto)` | `Success`, `EventNotFound` eller `OutsideEventPeriod`. Vagten bliver altid en kladde. |

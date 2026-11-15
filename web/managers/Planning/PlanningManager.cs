@@ -18,6 +18,36 @@ public class PlanningManager(
     public Task<EventDto?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
         eventRepository.GetByIdAsync(eventId, cancellationToken);
 
+    public async Task<List<EventListItemDto>> SearchEventsAsync(EventSearchDto search, CancellationToken cancellationToken = default)
+    {
+        var events = await eventRepository.SearchAsync(search, cancellationToken);
+        var counts = (await shiftRepository.GetStatusCountsAsync(events.Select(x => x.Id), cancellationToken))
+            .ToDictionary(x => x.EventId);
+        return events.Select(x => new EventListItemDto
+        {
+            Event = x,
+            DraftCount = counts.GetValueOrDefault(x.Id)?.DraftCount ?? 0,
+            OpenCount = counts.GetValueOrDefault(x.Id)?.OpenCount ?? 0
+        }).ToList();
+    }
+
+    public async Task<OpenShiftsResultDto> OpenShiftsAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId, CancellationToken cancellationToken = default)
+    {
+        var item = await eventRepository.GetByIdAsync(eventId, cancellationToken);
+        if (item is null)
+        {
+            return new OpenShiftsResultDto { Result = PlanningResult.EventNotFound };
+        }
+
+        if (item.IsArchived)
+        {
+            return new OpenShiftsResultDto { Result = PlanningResult.EventArchived };
+        }
+
+        var opened = await shiftRepository.OpenAsync(eventId, shiftIds, openedByUserId, cancellationToken);
+        return new OpenShiftsResultDto { Result = PlanningResult.Success, OpenedShiftIds = opened };
+    }
+
     public async Task<EventOverviewDto?> GetEventOverviewAsync(Guid eventId, ShiftStatus? statusFilter = null, CancellationToken cancellationToken = default)
     {
         var item = await eventRepository.GetByIdAsync(eventId, cancellationToken);

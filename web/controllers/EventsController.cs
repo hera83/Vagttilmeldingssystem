@@ -19,7 +19,7 @@ public class EventsController(IEventRepository eventRepository, IPlanningManager
     [HttpGet]
     public async Task<IActionResult> Index(string? q, bool archived, CancellationToken cancellationToken)
     {
-        var events = await eventRepository.SearchAsync(EventsViewModelMapper.ToEventSearchDto(q, archived), cancellationToken);
+        var events = await planningManager.SearchEventsAsync(EventsViewModelMapper.ToEventSearchDto(q, archived), cancellationToken);
         var counts = await eventRepository.GetCountsAsync(cancellationToken);
         return View(events.ToIndexEventsViewModel(counts, q, archived));
     }
@@ -34,6 +34,72 @@ public class EventsController(IEventRepository eventRepository, IPlanningManager
         }
 
         return View(overview.ToDetailsEventsViewModel(status));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Open(Guid id, CancellationToken cancellationToken)
+    {
+        var overview = await planningManager.GetEventOverviewAsync(id, cancellationToken: cancellationToken);
+        if (overview is null)
+        {
+            return NotFound();
+        }
+
+        if (overview.Event.IsArchived || overview.DraftCount == 0)
+        {
+            TempData["Error"] = overview.Event.IsArchived
+                ? "Begivenheden er arkiveret. Gør den aktiv igen, før du åbner for tilmelding."
+                : "Der er ingen kladder at åbne.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        return View(overview.ToOpenEventsViewModel());
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Open(Guid id, OpenEventsViewModel model, CancellationToken cancellationToken)
+    {
+        if (UserPrincipalFactory.GetUserId(User) is not { } adminId)
+        {
+            return Challenge();
+        }
+
+        if (model.ShiftIds.Count == 0)
+        {
+            var overview = await planningManager.GetEventOverviewAsync(id, cancellationToken: cancellationToken);
+            if (overview is null)
+            {
+                return NotFound();
+            }
+
+            ModelState.AddModelError(nameof(model.ShiftIds), "Vælg mindst én vagt, der skal åbnes.");
+            return View(overview.ToOpenEventsViewModel(model.ShiftIds));
+        }
+
+        var result = await planningManager.OpenShiftsAsync(id, model.ShiftIds, adminId, cancellationToken);
+        switch (result.Result)
+        {
+            case PlanningResult.EventNotFound:
+                return NotFound();
+            case PlanningResult.EventArchived:
+                TempData["Error"] = "Begivenheden er arkiveret. Gør den aktiv igen, før du åbner for tilmelding.";
+                break;
+            default:
+                if (result.OpenedShiftIds.Count == 0)
+                {
+                    TempData["Error"] = "Der var ingen kladder at åbne. De valgte vagter er allerede åbne.";
+                }
+                else
+                {
+                    TempData["Success"] = result.OpenedShiftIds.Count == 1
+                        ? "1 vagt er nu åben for tilmelding."
+                        : $"{result.OpenedShiftIds.Count} vagter er nu åbne for tilmelding.";
+                }
+
+                break;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpGet]

@@ -11,6 +11,8 @@
 | `GetByIdAsync(Guid id)` | Én vagt i enhver status, eller `null`. **Kun til admin.** |
 | `GetByEventIdAsync(Guid eventId, ShiftStatus? status)` | Begivenhedens vagter sorteret efter starttid, evt. kun én status. **Kun til admin.** |
 | `AnyForEventAsync(Guid eventId)` | Har begivenheden vagter? Bruges til at spærre sletning af begivenheden. |
+| `GetStatusCountsAsync(IEnumerable<Guid> eventIds)` | Antal kladder og åbne vagter pr. begivenhed (til begivenhedslisten). |
+| `OpenAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId)` | **Frigivelsen:** sætter de valgte kladder i begivenheden til `Open` (med `OpenedAt`/`OpenedByUserId`) i én transaktion og returnerer id'erne på de åbnede. Vagter fra andre begivenheder og allerede åbne vagter ignoreres, så et gentaget kald åbner 0. Det eneste sted, hvor status bliver `Open`. |
 | `CreateAsync(Guid eventId, CreateShiftDto dto)` | Opretter en vagt. Status er **altid** `Draft`. Dto'en har ikke engang et statusfelt. |
 | `UpdateAsync(Guid id, UpdateShiftDto dto)` | Retter titel, beskrivelse, tid og kapacitet. Status ændres aldrig her. Resultat: `Success`, `NotFound` eller `CapacityBelowTaken` (kapaciteten ville blive lavere end antal aktive tildelinger, `Taken` angiver antallet). |
 | `DeleteAsync(Guid id)` | Sletter vagten og dens afmeldte historik. Resultat: `Success`, `NotFound` eller `HasActiveAssignments`. |

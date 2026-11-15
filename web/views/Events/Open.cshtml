@@ -1,0 +1,46 @@
+@model web.ViewModels.Events.OpenEventsViewModel
+@{
+    ViewData["Title"] = "Åbn for tilmelding";
+}
+<a class="back-link" asp-action="Details" asp-route-id="@Model.EventId"><icon name="arrow-left" />Tilbage til @Model.EventName</a>
+<div class="page-header">
+    <div>
+        <h1>Åbn for tilmelding?</h1>
+        <p>@Model.EventName</p>
+    </div>
+</div>
+
+<form asp-action="Open" asp-route-id="@Model.EventId" method="post" class="card form-wide">
+    <div class="confirm-question">
+        <span class="card-icon"><icon name="play" /></span>
+        <div>
+            <h2>Er du sikker på, du vil åbne for tilmeldingen @Model.PeriodQuestion?</h2>
+            <p>De valgte vagter bliver synlige for alle forældre på samme tid, og ledige pladser fordeles efter først-til-mølle. En åben vagt kan ikke gøres skjult igen. Personer, du allerede har sat på en vagt, beholder deres plads.</p>
+        </div>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+
+    <fieldset class="choice-list">
+        <legend>Vagter, der åbnes (@Model.Drafts.Count kladder)</legend>
+        @foreach (var shift in Model.Drafts)
+        {
+            <label class="choice">
+                <input type="checkbox" name="ShiftIds" value="@shift.Id" checked="@shift.Selected" />
+                <span class="choice-main">
+                    <strong>@shift.Title</strong>
+                    <span class="meta">
+                        <span><icon name="calendar" />@shift.DateText</span>
+                        <span><icon name="clock" />@shift.TimeText</span>
+                        <span><icon name="users" />@(shift.Capacity - shift.Taken) af @shift.Capacity ledige@(shift.Taken > 0 ? $" ({shift.Taken} forhåndstildelt)" : "")</span>
+                    </span>
+                </span>
+            </label>
+        }
+    </fieldset>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><icon name="play" />Åbn for tilmelding</button>
+        <a class="btn btn-ghost" asp-action="Details" asp-route-id="@Model.EventId">Annuller</a>
+    </div>
+</form>

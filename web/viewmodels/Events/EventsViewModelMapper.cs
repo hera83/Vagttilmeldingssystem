@@ -14,15 +14,17 @@ public static class EventsViewModelMapper
         Archived = archived
     };
 
-    public static IndexEventsViewModel ToIndexEventsViewModel(this List<EventDto> events, EventCountsDto counts, string? query, bool archived) => new()
+    public static IndexEventsViewModel ToIndexEventsViewModel(this List<EventListItemDto> events, EventCountsDto counts, string? query, bool archived) => new()
     {
         Events = events.Select(x => new EventListItemViewModel
         {
-            Id = x.Id,
-            Name = x.Name,
-            Location = x.Location,
-            PeriodText = DateTimeExtensions.ToDanishPeriodText(x.StartDate, x.EndDate),
-            IsArchived = x.IsArchived
+            Id = x.Event.Id,
+            Name = x.Event.Name,
+            Location = x.Event.Location,
+            PeriodText = DateTimeExtensions.ToDanishPeriodText(x.Event.StartDate, x.Event.EndDate),
+            IsArchived = x.Event.IsArchived,
+            DraftCount = x.DraftCount,
+            OpenCount = x.OpenCount
         }).ToList(),
         Query = query,
         ShowArchived = archived,
@@ -52,6 +54,36 @@ public static class EventsViewModelMapper
         OpenCount = overview.OpenCount,
         StatusFilter = statusFilter?.ToString()
     };
+
+    /// <summary>Bekræftelsessiden. Er selectedIds null (GET), er alle kladder valgt.</summary>
+    public static OpenEventsViewModel ToOpenEventsViewModel(this EventOverviewDto overview, IReadOnlyCollection<Guid>? selectedIds = null)
+    {
+        var drafts = overview.Shifts.Where(x => x.Status == ShiftStatus.Draft).ToList();
+        var dates = drafts.Select(x => DateOnly.FromDateTime(x.StartUtc.ToDanishTime())).ToList();
+        var question = dates.Count == 0
+            ? string.Empty
+            : dates.Min() == dates.Max()
+                ? $"den {dates.Min().ToDanishDateText()}"
+                : $"til perioden {dates.Min().ToDanishDateText()} til {dates.Max().ToDanishDateText()}";
+
+        return new OpenEventsViewModel
+        {
+            ShiftIds = selectedIds?.ToList() ?? drafts.Select(x => x.Id).ToList(),
+            EventId = overview.Event.Id,
+            EventName = overview.Event.Name,
+            PeriodQuestion = question,
+            Drafts = drafts.Select(x => new OpenShiftOptionViewModel
+            {
+                Id = x.Id,
+                Title = x.Title,
+                DateText = x.StartUtc.ToDanishDateText(),
+                TimeText = DateTimeExtensions.ToDanishTimeRangeText(x.StartUtc, x.EndUtc),
+                Capacity = x.Capacity,
+                Taken = overview.TakenCounts.GetValueOrDefault(x.Id),
+                Selected = selectedIds is null || selectedIds.Contains(x.Id)
+            }).ToList()
+        };
+    }
 
     public static CreateEventDto ToCreateEventDto(this CreateEventsViewModel model) => new()
     {

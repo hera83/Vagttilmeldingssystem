@@ -64,10 +64,24 @@ else
                             <span><icon name="map-pin" />@item.Location</span>
                         </span>
                     </span>
-                    @if (item.IsArchived)
-                    {
-                        <span class="badge badge-neutral"><icon name="archive" />Arkiveret</span>
-                    }
+                    <span class="badges">
+                        @if (item.IsArchived)
+                        {
+                            <span class="badge badge-neutral"><icon name="archive" />Arkiveret</span>
+                        }
+                        @if (item.DraftCount > 0)
+                        {
+                            <span class="badge badge-draft"><icon name="eye-off" />@item.DraftCount @(item.DraftCount == 1 ? "kladde" : "kladder")</span>
+                        }
+                        @if (item.OpenCount > 0)
+                        {
+                            <span class="badge badge-open"><icon name="users" />@item.OpenCount åben@(item.OpenCount == 1 ? "" : "e")</span>
+                        }
+                        @if (item.DraftCount + item.OpenCount == 0)
+                        {
+                            <span class="badge badge-neutral">Ingen vagter</span>
+                        }
+                    </span>
                     <icon name="chevron-right" class="item-chevron" />
                 </a>
             </li>

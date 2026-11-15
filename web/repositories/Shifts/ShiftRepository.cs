@@ -31,6 +31,52 @@ public class ShiftRepository(WebDbContext dbContext) : IShiftRepository
     public Task<bool> AnyForEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
         dbContext.Shifts.AnyAsync(x => x.EventId == eventId, cancellationToken);
 
+    public Task<List<EventShiftCountsDto>> GetStatusCountsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default)
+    {
+        var ids = eventIds.Distinct().ToList();
+        return dbContext.Shifts.AsNoTracking()
+            .Where(x => ids.Contains(x.EventId))
+            .GroupBy(x => x.EventId)
+            .Select(g => new EventShiftCountsDto
+            {
+                EventId = g.Key,
+                DraftCount = g.Count(x => x.Status == ShiftStatus.Draft),
+                OpenCount = g.Count(x => x.Status == ShiftStatus.Open)
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Guid>> OpenAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId, CancellationToken cancellationToken = default)
+    {
+        var ids = shiftIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        // Én transaktion: alle valgte kladder bliver åbne på samme tid, eller ingen (krav K12).
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var toOpen = await dbContext.Shifts
+            .Where(x => x.EventId == eventId && ids.Contains(x.Id) && x.Status == ShiftStatus.Draft)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        if (toOpen.Count > 0)
+        {
+            var now = DateTime.UtcNow;
+            await dbContext.Shifts
+                .Where(x => toOpen.Contains(x.Id))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.Status, ShiftStatus.Open)
+                    .SetProperty(x => x.OpenedAt, now)
+                    .SetProperty(x => x.OpenedByUserId, openedByUserId)
+                    .SetProperty(x => x.UpdatedAt, now), cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return toOpen;
+    }
+
     public async Task<ShiftDto> CreateAsync(Guid eventId, CreateShiftDto dto, CancellationToken cancellationToken = default)
     {
         var entity = dto.ToEntity(eventId);

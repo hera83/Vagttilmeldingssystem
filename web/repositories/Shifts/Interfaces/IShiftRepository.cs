@@ -12,6 +12,15 @@ public interface IShiftRepository
 
     Task<bool> AnyForEventAsync(Guid eventId, CancellationToken cancellationToken = default);
 
+    /// <summary>Antal kladder og åbne vagter pr. begivenhed (begivenheder uden vagter er ikke med).</summary>
+    Task<List<EventShiftCountsDto>> GetStatusCountsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Frigivelsen: sætter de valgte kladder i begivenheden til Open i én transaktion og returnerer id'erne på dem,
+    /// der blev åbnet. Vagter fra andre begivenheder og vagter, der allerede er åbne, ignoreres (idempotent).
+    /// </summary>
+    Task<List<Guid>> OpenAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId, CancellationToken cancellationToken = default);
+
     Task<ShiftDto> CreateAsync(Guid eventId, CreateShiftDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>Retter vagten. Afvises med CapacityBelowTaken, hvis kapaciteten bliver lavere end antal aktive tildelinger (tjekket i samme transaktion).</summary>

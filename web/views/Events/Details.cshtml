@@ -16,6 +16,10 @@
         </p>
     </div>
     <div class="page-actions">
+        @if (Model.DraftCount > 0 && !Model.IsArchived)
+        {
+            <a class="btn btn-primary" asp-action="Open" asp-route-id="@Model.Id"><icon name="play" />Åbn for tilmelding</a>
+        }
         <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@Model.Id"><icon name="edit" />Ret begivenhed</a>
         @if (Model.IsArchived)
         {
@@ -38,7 +42,7 @@
 <section class="section" aria-labelledby="shifts-title">
     <div class="section-header">
         <h2 id="shifts-title">Vagter <span class="muted">(@Model.TotalCount)</span></h2>
-        <a class="btn btn-primary" asp-controller="Shifts" asp-action="Create" asp-route-eventId="@Model.Id"><icon name="plus" />Opret vagt</a>
+        <a class="btn btn-secondary" asp-controller="Shifts" asp-action="Create" asp-route-eventId="@Model.Id"><icon name="plus" />Opret vagt</a>
     </div>
 
     @if (Model.TotalCount == 0)

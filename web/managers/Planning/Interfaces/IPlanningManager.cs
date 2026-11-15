@@ -9,6 +9,11 @@ public interface IPlanningManager
 {
     Task<EventDto?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default);
 
+    Task<List<EventListItemDto>> SearchEventsAsync(EventSearchDto search, CancellationToken cancellationToken = default);
+
+    /// <summary>Frigivelsen: åbner de valgte kladder i begivenheden for tilmelding i én transaktion.</summary>
+    Task<OpenShiftsResultDto> OpenShiftsAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId, CancellationToken cancellationToken = default);
+
     Task<EventOverviewDto?> GetEventOverviewAsync(Guid eventId, ShiftStatus? statusFilter = null, CancellationToken cancellationToken = default);
 
     Task<ShiftEditorDto?> GetShiftEditorAsync(Guid shiftId, CancellationToken cancellationToken = default);

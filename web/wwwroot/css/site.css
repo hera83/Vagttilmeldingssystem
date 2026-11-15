@@ -399,3 +399,20 @@ table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; te
 @media (max-width: 640px) {
     .shift-row .badge { display: none; }
 }
+
+/* ---------- Bekræftelse og afkrydsningslister ---------- */
+.confirm-question { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1.25rem; }
+.confirm-question h2 { font-size: 1.2rem; }
+.confirm-question p { color: var(--text-muted); margin: 0; }
+.choice-list { border: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.choice-list legend { font-weight: 700; margin-bottom: .5rem; padding: 0; }
+.choice { display: flex; align-items: flex-start; gap: .75rem; padding: .7rem .9rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; cursor: pointer; }
+.choice:hover { border-color: #B9CCE6; background: #FAFCFF; }
+.choice input { width: 1.25rem; height: 1.25rem; margin-top: .15rem; accent-color: var(--primary); flex: none; }
+.choice-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.choice:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
+.badges { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: flex-end; }
+@media (max-width: 640px) {
+    .item-row .badges { display: none; }
+    .confirm-question .card-icon { display: none; }
+}

@@ -7,4 +7,6 @@ public class EventListItemViewModel
     public string Location { get; set; } = string.Empty;
     public string PeriodText { get; set; } = string.Empty;
     public bool IsArchived { get; set; }
+    public int DraftCount { get; set; }
+    public int OpenCount { get; set; }
 }

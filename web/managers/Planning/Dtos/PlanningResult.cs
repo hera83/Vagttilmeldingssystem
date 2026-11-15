@@ -16,5 +16,8 @@ public enum PlanningResult
     CapacityBelowTaken,
 
     /// <summary>Vagten har aktive tildelinger og kan ikke slettes. Fjern personerne først.</summary>
-    ShiftHasAssignments
+    ShiftHasAssignments,
+
+    /// <summary>Begivenheden er arkiveret, så der kan ikke åbnes for tilmelding.</summary>
+    EventArchived
 }
