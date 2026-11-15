@@ -171,7 +171,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); }
 input[readonly] { background: var(--bg); color: var(--text-muted); }
 .input-validation-error { border-color: var(--danger) !important; }
 .checkbox { display: flex; align-items: center; gap: .55rem; font-weight: 600; margin-bottom: 1rem; }
-.checkbox input { width: 1.2rem; height: 1.2rem; accent-color: var(--primary); }
+.checkbox input { width: 1.5rem; height: 1.5rem; accent-color: var(--primary); flex: none; }
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0 1rem; }
 .form-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.25rem; }
 .field-validation-error { display: block; color: var(--danger); font-size: .92rem; margin-top: .25rem; font-weight: 600; }
@@ -257,9 +257,10 @@ progress.progress.is-full::-moz-progress-bar { background: var(--primary); }
 @media (max-width: 900px) {
     .topnav { display: none; }
     .shell { flex-direction: column; }
-    .sidebar { width: auto; border-right: none; border-bottom: 1px solid var(--border); padding: .5rem .75rem; overflow-x: auto; }
+    .sidebar { width: auto; border-right: none; border-bottom: 1px solid var(--border); padding: .5rem .75rem; }
     .sidebar-title { display: none; }
-    .sidebar nav { flex-direction: row; gap: .25rem; }
+    /* Admin-menuen ombrydes på flere linjer, så alle punkter kan ses uden vandret rulning. */
+    .sidebar nav { flex-direction: row; flex-wrap: wrap; gap: .25rem; }
     .sidebar nav a { white-space: nowrap; }
     .main { padding: 1.25rem 1rem 6rem; }
     .grid-2, .grid-3, .grid-sidebar, .hero { grid-template-columns: minmax(0, 1fr); }
@@ -375,7 +376,8 @@ table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; te
 .calendar th { font-size: .8rem; color: var(--text-muted); font-weight: 700; padding: .3rem 0; }
 .calendar td { padding: .15rem 0; position: relative; }
 .calendar .day { display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 999px; font-variant-numeric: tabular-nums; }
-.calendar td.out .day { color: #A6B1C2; }
+/* Dage uden for måneden: lysere, men stadig mindst 4,5:1 i kontrast (WCAG 1.4.3). */
+.calendar td.out .day { color: var(--text-muted); font-weight: 400; }
 .calendar td.today .day { outline: 2px solid var(--primary); outline-offset: -2px; font-weight: 800; }
 .calendar td.has-upcoming .day { background: var(--primary); color: #fff; font-weight: 800; }
 .calendar td.has-past .day { background: var(--draft-soft); color: var(--text); font-weight: 700; }
@@ -409,7 +411,7 @@ table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; te
 .choice-list legend { font-weight: 700; margin-bottom: .5rem; padding: 0; }
 .choice { display: flex; align-items: flex-start; gap: .75rem; padding: .7rem .9rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; cursor: pointer; }
 .choice:hover { border-color: #B9CCE6; background: #FAFCFF; }
-.choice input { width: 1.25rem; height: 1.25rem; margin-top: .15rem; accent-color: var(--primary); flex: none; }
+.choice input { width: 1.5rem; height: 1.5rem; margin-top: 0; accent-color: var(--primary); flex: none; }
 .choice-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
 .choice:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
 .badges { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: flex-end; }
@@ -429,7 +431,7 @@ table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; te
 .summary-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .5rem; }
 .summary-list li { display: flex; flex-direction: column; padding: .5rem .7rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
 .signup-table td.cell-check { width: 2.75rem; }
-.signup-table input[type="checkbox"] { width: 1.3rem; height: 1.3rem; accent-color: var(--primary); }
+.signup-table input[type="checkbox"] { width: 1.5rem; height: 1.5rem; accent-color: var(--primary); }
 .signup-table tr.is-selected { background: var(--primary-soft); }
 .signup-table label { display: flex; flex-direction: column; cursor: pointer; }
 .shift-description { display: block; max-width: 40ch; }
@@ -536,3 +538,14 @@ a.kpi:hover { border-color: var(--primary); }
 .mail-attachments { list-style: none; padding: 0; margin: 0; display: grid; gap: .35rem; }
 .mail-attachments a { display: inline-flex; align-items: center; gap: .4rem; font-weight: 600; }
 textarea.mail-body { width: 100%; font-family: var(--font); line-height: 1.5; }
+
+/* Gennemgang af mobil og tilgængelighed (step 14) */
+@media (max-width: 640px) {
+    /* Fanerne ruller inden i sig selv, så siden aldrig får vandret scroll. */
+    .tabs { overflow-x: auto; scrollbar-width: thin; }
+    .tabs a { padding: .55rem .6rem; white-space: nowrap; }
+}
+[aria-invalid="true"] { border-color: var(--danger); }
+
+/* Ikon-sprite (symbolerne bruges med <use>). I CSS i stedet for style-attribut (CSP, step 15). */
+.icon-sprite { display: none; }
