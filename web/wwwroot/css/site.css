@@ -475,3 +475,8 @@ table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; te
     .pwa-teaser { grid-template-columns: minmax(0, 1fr); }
     .pwa-teaser-steps { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 1.25rem; }
 }
+
+/* Push-panelet på Min profil (step 10) */
+.setting-row { display: flex; gap: .85rem; align-items: flex-start; padding: .85rem 0; border-top: 1px solid var(--border); }
+.setting-main { display: grid; gap: .25rem; min-width: 0; }
+.setting-main .badge { justify-self: start; margin-top: .25rem; }

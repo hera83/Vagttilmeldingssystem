@@ -57,6 +57,39 @@ public class ShiftRepository(WebDbContext dbContext) : IShiftRepository
              EventLocation = e.Location
          }).ToListAsync(cancellationToken);
 
+    public async Task<List<OpenedBatchDto>> GetUnnotifiedOpenedAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+    {
+        var rows = await (from s in dbContext.Shifts.AsNoTracking()
+                          join e in dbContext.Events on s.EventId equals e.Id
+                          where s.Status == ShiftStatus.Open && s.OpenNotifiedAt == null && s.OpenedAt != null
+                          select new { s.Id, s.EventId, EventName = e.Name, OpenedAt = s.OpenedAt!.Value, Available = !e.IsArchived && s.StartUtc > nowUtc })
+            .ToListAsync(cancellationToken);
+
+        // Frigivelsen sætter samme OpenedAt på alle vagter i samme handling (OpenAsync).
+        return rows
+            .GroupBy(x => new { x.EventId, x.OpenedAt })
+            .Select(g => new OpenedBatchDto
+            {
+                EventId = g.Key.EventId,
+                EventName = g.First().EventName,
+                OpenedAt = g.Key.OpenedAt,
+                ShiftIds = g.Select(x => x.Id).ToList(),
+                AvailableCount = g.Count(x => x.Available)
+            })
+            .OrderBy(x => x.OpenedAt)
+            .ToList();
+    }
+
+    public Task<int> MarkOpenNotifiedAsync(IReadOnlyCollection<Guid> shiftIds, DateTime atUtc, CancellationToken cancellationToken = default)
+    {
+        var ids = shiftIds.Distinct().ToList();
+        return dbContext.Shifts
+            .Where(x => ids.Contains(x.Id) && x.OpenNotifiedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.OpenNotifiedAt, atUtc)
+                .SetProperty(x => x.UpdatedAt, atUtc), cancellationToken);
+    }
+
     public Task<List<EventShiftCountsDto>> GetStatusCountsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default)
     {
         var ids = eventIds.Distinct().ToList();

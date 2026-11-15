@@ -15,4 +15,7 @@ public class Shift : EntityBase
 
     public DateTime? OpenedAt { get; set; }
     public Guid? OpenedByUserId { get; set; }
+
+    /// <summary>Hvornår NotificationWorker lagde beskeder om frigivelsen i køen. Null = ikke behandlet endnu.</summary>
+    public DateTime? OpenNotifiedAt { get; set; }
 }

@@ -1,5 +1,6 @@
 using web.Data.Models;
 using web.Extensions;
+using web.Infrastructure.Notifications;
 using web.Infrastructure.Realtime;
 using web.Managers.Planning.Dtos;
 using web.Managers.Planning.Interfaces;
@@ -15,7 +16,8 @@ public class PlanningManager(
     IEventRepository eventRepository,
     IShiftRepository shiftRepository,
     IAssignmentRepository assignmentRepository,
-    IShiftUpdatesNotifier notifier) : IPlanningManager
+    IShiftUpdatesNotifier notifier,
+    NotificationSignal notificationSignal) : IPlanningManager
 {
     public Task<EventDto?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
         eventRepository.GetByIdAsync(eventId, cancellationToken);
@@ -51,6 +53,8 @@ public class PlanningManager(
         {
             // Efter commit: alle åbne sider får besked på samme tid (krav K12).
             await notifier.PublishAsync(new ShiftUpdate { EventId = eventId, ShiftIds = opened, IsPublic = true, Opened = true }, cancellationToken);
+            // Push til lukkede apps: NotificationWorker finder frigivelsen og lægger beskeder i køen (step 10).
+            notificationSignal.Notify();
         }
 
         return new OpenShiftsResultDto { Result = PlanningResult.Success, OpenedShiftIds = opened };

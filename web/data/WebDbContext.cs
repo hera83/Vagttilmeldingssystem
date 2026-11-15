@@ -10,6 +10,8 @@ public class WebDbContext(DbContextOptions<WebDbContext> options) : DbContext(op
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

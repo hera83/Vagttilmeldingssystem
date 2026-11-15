@@ -4,6 +4,7 @@
 // - Kun statiske filer (css, js, ikoner, manifest) og offline-siden caches. Sider, POST-svar, live-opdateringer
 //   og alt med persondata hentes altid fra netværket og gemmes aldrig.
 // - Sider (navigationer) hentes fra netværket. Fejler netværket, vises /offline.html.
+// - Push (step 10): viser beskeden som notifikation og åbner adressen i appen, når der trykkes på den.
 // - Statiske filer: stale-while-revalidate. Filer med versionsnøgle i adressen (asp-append-version) skifter
 //   adresse, når indholdet ændres, så der aldrig bruges en forældet version på en ny side.
 'use strict';
@@ -111,4 +112,47 @@ self.addEventListener('fetch', (event) => {
     }
 
     // Alt andet (live-opdateringer, /hubs/shifts, data) går direkte til netværket uden service workeren.
+});
+
+// Push: serveren sender JSON { title, body, url, tag }. Indholdet er altid generisk (ingen persondata).
+self.addEventListener('push', (event) => {
+    let data = {};
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch {
+        data = { body: event.data ? event.data.text() : '' };
+    }
+
+    event.waitUntil(self.registration.showNotification(data.title || 'Vagttilmelding', {
+        body: data.body || '',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        lang: 'da',
+        tag: data.tag || undefined,
+        renotify: Boolean(data.tag),
+        data: { url: data.url || '/' }
+    }));
+});
+
+// Tryk på notifikationen: brug et åbent vindue af appen, ellers åbn et nyt. Kun adresser i appen.
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    let target = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin);
+    if (target.origin !== self.location.origin) {
+        target = new URL('/', self.location.origin);
+    }
+
+    event.waitUntil((async () => {
+        const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const client of windows) {
+            if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+                await client.focus();
+                if ('navigate' in client) {
+                    await client.navigate(target.href);
+                }
+                return;
+            }
+        }
+        await self.clients.openWindow(target.href);
+    })());
 });

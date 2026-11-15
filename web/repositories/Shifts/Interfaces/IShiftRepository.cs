@@ -21,6 +21,15 @@ public interface IShiftRepository
     /// </summary>
     Task<List<OpenShiftDto>> GetOpenAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Frigivelser, der endnu ikke er sendt beskeder om (åbne vagter med OpenNotifiedAt = null), grupperet pr. begivenhed og OpenedAt.
+    /// Kladder er aldrig med (krav K10).
+    /// </summary>
+    Task<List<OpenedBatchDto>> GetUnnotifiedOpenedAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Markerer, at der er lagt beskeder i køen om vagterne. Returnerer antal opdaterede.</summary>
+    Task<int> MarkOpenNotifiedAsync(IReadOnlyCollection<Guid> shiftIds, DateTime atUtc, CancellationToken cancellationToken = default);
+
     /// <summary>Antal kladder og åbne vagter pr. begivenhed (begivenheder uden vagter er ikke med).</summary>
     Task<List<EventShiftCountsDto>> GetStatusCountsAsync(IEnumerable<Guid> eventIds, CancellationToken cancellationToken = default);
 

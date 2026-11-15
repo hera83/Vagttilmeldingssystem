@@ -109,6 +109,30 @@
     </section>
 
     <div>
+        <section class="card" aria-labelledby="notify-title" data-push-panel>
+            <div class="card-header">
+                <span class="card-icon"><icon name="bell" /></span>
+                <div>
+                    <h2 id="notify-title">Påmindelser og meddelelser</h2>
+                    <p>Vælg, hvordan du vil have besked om nye vagter.</p>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="card-icon"><icon name="smartphone" /></span>
+                <div class="setting-main">
+                    <strong>Push-beskeder på denne enhed</strong>
+                    <span class="muted small">Få besked, når der åbnes for tilmelding til nye vagter – også når appen er lukket.</span>
+                    <span class="badge badge-neutral" data-push-status>Kræver JavaScript</span>
+                </div>
+            </div>
+            <p class="muted small mb-0" data-push-hint role="status" aria-live="polite" hidden></p>
+            <div class="form-actions mt-1 mb-0">
+                <button type="button" class="btn btn-primary btn-sm" data-push-enable hidden><icon name="bell" />Slå push til</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-push-test hidden><icon name="send" />Send testbesked</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-push-disable hidden><icon name="x" />Slå fra</button>
+            </div>
+        </section>
+
         <section class="card" aria-labelledby="security-title">
             <div class="card-header">
                 <span class="card-icon"><icon name="lock" /></span>
@@ -121,3 +145,7 @@
         </section>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/push.js" asp-append-version="true"></script>
+}

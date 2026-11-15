@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
+using web.Services.Push;
 
 namespace web.Infrastructure.ErrorHandling;
 
@@ -8,7 +9,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
     {
         var statusCode = exception switch
         {
-            // Én linje pr. service med egen exception: <System>Exception ex => (int)ex.StatusCode,
+            // Én linje pr. service med egen exception.
+            PushException ex => (int)ex.StatusCode,
             _ => StatusCodes.Status500InternalServerError
         };
 
