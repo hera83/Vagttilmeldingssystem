@@ -27,6 +27,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 html { -webkit-text-size-adjust: 100%; }
 
@@ -446,3 +447,6 @@ table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; te
     .signup-table tr { position: relative; padding-right: 3rem; }
     .shift-description { display: none; }
 }
+
+/* ---------- Live-status ---------- */
+.live-status { position: sticky; top: calc(var(--topbar-height) + .5rem); z-index: 10; }

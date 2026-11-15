@@ -55,6 +55,7 @@
             </aside>
         }
         <main id="main" class="main" tabindex="-1">
+            <div class="alert alert-warning live-status" data-live-status role="status" aria-live="polite" hidden></div>
             @if (TempData["Success"] is string success)
             {
                 <div class="alert alert-success" role="status"><icon name="check-circle" /><span>@success</span></div>
@@ -78,6 +79,11 @@
     }
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (isAuthenticated)
+    {
+        <script src="~/lib/microsoft-signalr/signalr.min.js" asp-append-version="true"></script>
+        <script src="~/js/realtime.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

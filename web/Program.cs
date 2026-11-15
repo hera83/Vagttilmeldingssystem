@@ -16,6 +16,7 @@ using web.Data.Seeds;
 using web.Infrastructure.Authentication;
 using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
+using web.Infrastructure.Realtime;
 using web.Managers.Assignments;
 using web.Managers.Assignments.Interfaces;
 using web.Managers.Enrollment;
@@ -96,6 +97,10 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddHttpClient();
+
+// Realtid til åbne sider (step 08). Notifieren er singleton, fordi IHubContext er det.
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IShiftUpdatesNotifier, ShiftUpdatesNotifier>();
 
 // app.db (dbcontext.md). Data Source er relativ i appsettings og gøres absolut ud fra ContentRootPath.
 var appDb = new SqliteConnectionStringBuilder(builder.Configuration.GetConnectionString("Default") ?? "Data Source=app_dbs/app.db");
@@ -195,5 +200,8 @@ app.UseAuthorization();
 app.MapStaticAssets().AllowAnonymous();
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// Realtid (SignalR): kræver login via fallback-policyen. Klienter kan kun modtage, ikke kalde noget.
+app.MapHub<ShiftsHub>(ShiftsHub.Path);
 
 app.Run();

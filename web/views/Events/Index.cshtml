@@ -28,6 +28,7 @@
     </form>
 </div>
 
+<div data-live-region="events" data-live-on="eventChanged">
 @if (Model.Events.Count == 0)
 {
     <div class="card empty-state">
@@ -88,3 +89,4 @@ else
         }
     </ul>
 }
+</div>

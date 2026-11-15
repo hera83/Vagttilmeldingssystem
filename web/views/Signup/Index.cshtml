@@ -17,6 +17,7 @@
     </div>
 }
 
+<div data-live-region="signup" data-live-on="shiftsOpened shiftsChanged myShiftsChanged" data-live-url="@Url.Action("Index", new { eventId = Model.EventFilter })">
 @if (Model.Events.Count == 0)
 {
     <div class="card empty-state">
@@ -142,6 +143,7 @@ else
         </aside>
     </form>
 }
+</div>
 
 @section Scripts {
     <script src="~/js/signup.js" asp-append-version="true"></script>

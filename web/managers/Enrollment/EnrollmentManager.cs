@@ -1,4 +1,5 @@
 using web.Data.Models;
+using web.Infrastructure.Realtime;
 using web.Managers.Enrollment.Dtos;
 using web.Managers.Enrollment.Interfaces;
 using web.Repositories.Assignments.Dtos;
@@ -11,7 +12,8 @@ namespace web.Managers.Enrollment;
 public class EnrollmentManager(
     IShiftRepository shiftRepository,
     IAssignmentRepository assignmentRepository,
-    IProfileRepository profileRepository) : IEnrollmentManager
+    IProfileRepository profileRepository,
+    IShiftUpdatesNotifier notifier) : IEnrollmentManager
 {
     public async Task<AvailableOverviewDto> GetAvailableAsync(Guid userId, CancellationToken cancellationToken = default)
     {
@@ -53,9 +55,25 @@ public class EnrollmentManager(
             OnlyOpen = true
         }, cancellationToken);
 
-        return result.Succeeded
-            ? new EnrollResultDto { Status = EnrollStatus.Success, CreatedShiftIds = result.CreatedShiftIds }
-            : new EnrollResultDto { Status = EnrollStatus.Conflict, Failures = result.Failures };
+        if (!result.Succeeded)
+        {
+            return new EnrollResultDto { Status = EnrollStatus.Conflict, Failures = result.Failures };
+        }
+
+        // Efter commit: færre ledige pladser på åbne vagter (alle) og brugerens egne vagter (brugeren).
+        var eventIds = await shiftRepository.GetEventIdsAsync(result.CreatedShiftIds, cancellationToken);
+        foreach (var group in result.CreatedShiftIds.GroupBy(id => eventIds.GetValueOrDefault(id)))
+        {
+            await notifier.PublishAsync(new ShiftUpdate
+            {
+                EventId = group.Key,
+                ShiftIds = group.ToList(),
+                IsPublic = true,
+                AffectedUserIds = [userId]
+            }, cancellationToken);
+        }
+
+        return new EnrollResultDto { Status = EnrollStatus.Success, CreatedShiftIds = result.CreatedShiftIds };
     }
 
     public async Task<HomeOverviewDto> GetHomeAsync(Guid userId, CancellationToken cancellationToken = default)

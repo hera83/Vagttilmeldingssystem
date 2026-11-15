@@ -1,0 +1,6 @@
+@microsoft/signalr 10.0.11 (dist/browser/signalr.min.js)
+Kilde: https://www.npmjs.com/package/@microsoft/signalr (hentet via https://cdn.jsdelivr.net/npm/@microsoft/signalr@10.0.11/dist/browser/signalr.min.js)
+SHA-256: 97e9b97e642a72e5a470917147a2bf79f86cad829a5c6786adb10614d248bb95
+
+Copyright (c) .NET Foundation and Contributors.
+Licenseret under MIT-licensen: https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt

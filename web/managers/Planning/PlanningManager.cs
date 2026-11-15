@@ -1,5 +1,6 @@
 using web.Data.Models;
 using web.Extensions;
+using web.Infrastructure.Realtime;
 using web.Managers.Planning.Dtos;
 using web.Managers.Planning.Interfaces;
 using web.Repositories.Assignments.Interfaces;
@@ -13,7 +14,8 @@ namespace web.Managers.Planning;
 public class PlanningManager(
     IEventRepository eventRepository,
     IShiftRepository shiftRepository,
-    IAssignmentRepository assignmentRepository) : IPlanningManager
+    IAssignmentRepository assignmentRepository,
+    IShiftUpdatesNotifier notifier) : IPlanningManager
 {
     public Task<EventDto?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
         eventRepository.GetByIdAsync(eventId, cancellationToken);
@@ -45,6 +47,12 @@ public class PlanningManager(
         }
 
         var opened = await shiftRepository.OpenAsync(eventId, shiftIds, openedByUserId, cancellationToken);
+        if (opened.Count > 0)
+        {
+            // Efter commit: alle åbne sider får besked på samme tid (krav K12).
+            await notifier.PublishAsync(new ShiftUpdate { EventId = eventId, ShiftIds = opened, IsPublic = true, Opened = true }, cancellationToken);
+        }
+
         return new OpenShiftsResultDto { Result = PlanningResult.Success, OpenedShiftIds = opened };
     }
 
@@ -92,7 +100,8 @@ public class PlanningManager(
             return PlanningResult.OutsideEventPeriod;
         }
 
-        await shiftRepository.CreateAsync(eventId, dto, cancellationToken);
+        var created = await shiftRepository.CreateAsync(eventId, dto, cancellationToken);
+        await notifier.PublishAsync(new ShiftUpdate { EventId = eventId, ShiftIds = [created.Id], IsPublic = false }, cancellationToken);
         return PlanningResult.Success;
     }
 
@@ -110,6 +119,19 @@ public class PlanningManager(
         }
 
         var result = await shiftRepository.UpdateAsync(shiftId, dto, cancellationToken);
+        if (result.Status == ShiftChangeStatus.Success)
+        {
+            // Tid/kapacitet ændret: åbne sider og de personer, der er på vagten, får besked.
+            var people = await assignmentRepository.GetActiveByShiftAsync(shiftId, cancellationToken);
+            await notifier.PublishAsync(new ShiftUpdate
+            {
+                EventId = editor.Event.Id,
+                ShiftIds = [shiftId],
+                IsPublic = editor.Shift.Status == ShiftStatus.Open,
+                AffectedUserIds = people.Select(x => x.UserId).ToList()
+            }, cancellationToken);
+        }
+
         return result.Status switch
         {
             ShiftChangeStatus.Success => PlanningResult.Success,
@@ -120,7 +142,18 @@ public class PlanningManager(
 
     public async Task<PlanningResult> DeleteShiftAsync(Guid shiftId, CancellationToken cancellationToken = default)
     {
+        var shift = await shiftRepository.GetByIdAsync(shiftId, cancellationToken);
         var result = await shiftRepository.DeleteAsync(shiftId, cancellationToken);
+        if (result.Status == ShiftChangeStatus.Success && shift is not null)
+        {
+            await notifier.PublishAsync(new ShiftUpdate
+            {
+                EventId = shift.EventId,
+                ShiftIds = [shiftId],
+                IsPublic = shift.Status == ShiftStatus.Open
+            }, cancellationToken);
+        }
+
         return result.Status switch
         {
             ShiftChangeStatus.Success => PlanningResult.Success,

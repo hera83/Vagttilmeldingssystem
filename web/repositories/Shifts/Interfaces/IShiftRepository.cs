@@ -12,6 +12,9 @@ public interface IShiftRepository
 
     Task<bool> AnyForEventAsync(Guid eventId, CancellationToken cancellationToken = default);
 
+    /// <summary>Vagt-id → begivenheds-id for de vagter, der findes.</summary>
+    Task<Dictionary<Guid, Guid>> GetEventIdsAsync(IEnumerable<Guid> shiftIds, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Til forældrene: kun åbne vagter i ikke-arkiverede begivenheder, der ikke er startet endnu, sorteret efter starttid.
     /// Filtreringen sker i selve forespørgslen, så kladder aldrig forlader databasen (krav K10).

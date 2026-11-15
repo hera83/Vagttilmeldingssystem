@@ -11,6 +11,7 @@
 | `GetByIdAsync(Guid id)` | Én vagt i enhver status, eller `null`. **Kun til admin.** |
 | `GetByEventIdAsync(Guid eventId, ShiftStatus? status)` | Begivenhedens vagter sorteret efter starttid, evt. kun én status. **Kun til admin.** |
 | `AnyForEventAsync(Guid eventId)` | Har begivenheden vagter? Bruges til at spærre sletning af begivenheden. |
+| `GetEventIdsAsync(IEnumerable<Guid> shiftIds)` | Vagt-id → begivenheds-id (til realtidssignaler). |
 | `GetOpenAsync(DateTime nowUtc)` | **Til forældrene:** kun `Open` vagter i ikke-arkiverede begivenheder, der ikke er startet, med begivenhedens navn og sted. Det eneste sted, hvor vagter læses til brugere (ud over deres egne i `Assignments`). |
 | `GetStatusCountsAsync(IEnumerable<Guid> eventIds)` | Antal kladder og åbne vagter pr. begivenhed (til begivenhedslisten). |
 | `OpenAsync(Guid eventId, IReadOnlyCollection<Guid> shiftIds, Guid openedByUserId)` | **Frigivelsen:** sætter de valgte kladder i begivenheden til `Open` (med `OpenedAt`/`OpenedByUserId`) i én transaktion og returnerer id'erne på de åbnede. Vagter fra andre begivenheder og allerede åbne vagter ignoreres, så et gentaget kald åbner 0. Det eneste sted, hvor status bliver `Open`. |

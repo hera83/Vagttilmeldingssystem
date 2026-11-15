@@ -14,7 +14,7 @@
     <p>Dine vagter er låst til dig. Bliver du forhindret, fx ved sygdom, så kontakt administratoren. Kun administratoren kan fjerne dig fra en vagt.</p>
 </div>
 
-<div class="grid grid-calendar">
+<div class="grid grid-calendar" data-live-region="myshifts" data-live-on="myShiftsChanged">
     <section class="card" aria-labelledby="calendar-title">
         <div class="calendar-header">
             <a class="btn btn-ghost btn-sm" asp-action="Index" asp-route-month="@Model.Calendar.PreviousMonth" title="Forrige måned"><icon name="chevron-left" /><span class="visually-hidden">Forrige måned</span></a>

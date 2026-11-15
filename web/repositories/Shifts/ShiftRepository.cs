@@ -31,6 +31,14 @@ public class ShiftRepository(WebDbContext dbContext) : IShiftRepository
     public Task<bool> AnyForEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
         dbContext.Shifts.AnyAsync(x => x.EventId == eventId, cancellationToken);
 
+    public async Task<Dictionary<Guid, Guid>> GetEventIdsAsync(IEnumerable<Guid> shiftIds, CancellationToken cancellationToken = default)
+    {
+        var ids = shiftIds.Distinct().ToList();
+        return await dbContext.Shifts.AsNoTracking()
+            .Where(x => ids.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, x => x.EventId, cancellationToken);
+    }
+
     public Task<List<OpenShiftDto>> GetOpenAsync(DateTime nowUtc, CancellationToken cancellationToken = default) =>
         (from s in dbContext.Shifts.AsNoTracking()
          join e in dbContext.Events on s.EventId equals e.Id

@@ -1,21 +1,22 @@
 // Ledige vagter: opdaterer panelet "Valgte vagter", mens brugeren krydser af.
 // Kun visning. Serveren afgør alt ved Bekræft tilmelding, og formularen virker også uden JavaScript.
+// Elementerne slås op hver gang, fordi live-opdateringen (realtime.js) kan udskifte hele formularen.
 (function () {
     'use strict';
 
-    var form = document.querySelector('[data-signup]');
-    if (!form) {
-        return;
-    }
-
-    var list = form.querySelector('[data-selected-list]');
-    var count = form.querySelector('[data-selected-count]');
-    var empty = form.querySelector('[data-selected-empty]');
-    var submit = form.querySelector('[data-submit]');
-    var profileComplete = form.getAttribute('data-profile-complete') === 'true';
-
     function update() {
+        var form = document.querySelector('[data-signup]');
+        if (!form) {
+            return;
+        }
+
+        var list = form.querySelector('[data-selected-list]');
+        var count = form.querySelector('[data-selected-count]');
+        var empty = form.querySelector('[data-selected-empty]');
+        var submit = form.querySelector('[data-submit]');
+        var profileComplete = form.getAttribute('data-profile-complete') === 'true';
         var checked = Array.prototype.slice.call(form.querySelectorAll('input[name="ShiftIds"]:checked'));
+
         list.textContent = '';
         checked.forEach(function (input) {
             var item = document.createElement('li');
@@ -27,14 +28,11 @@
             item.appendChild(title);
             item.appendChild(when);
             list.appendChild(item);
-
-            var row = input.closest('tr');
-            if (row) { row.classList.add('is-selected'); }
         });
 
-        form.querySelectorAll('input[name="ShiftIds"]:not(:checked)').forEach(function (input) {
+        form.querySelectorAll('input[name="ShiftIds"]').forEach(function (input) {
             var row = input.closest('tr');
-            if (row) { row.classList.remove('is-selected'); }
+            if (row) { row.classList.toggle('is-selected', input.checked); }
         });
 
         count.textContent = String(checked.length);
@@ -42,16 +40,24 @@
         submit.disabled = !profileComplete || checked.length === 0;
     }
 
-    form.addEventListener('change', function (event) {
+    document.addEventListener('change', function (event) {
         if (event.target && event.target.name === 'ShiftIds') {
             update();
         }
     });
 
+    document.addEventListener('live:updated', update);
+
     // Undgå dobbelt-klik, der sender formularen to gange.
-    form.addEventListener('submit', function () {
-        submit.disabled = true;
-        submit.setAttribute('aria-busy', 'true');
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (form instanceof HTMLFormElement && form.hasAttribute('data-signup') && !event.defaultPrevented) {
+            var submit = form.querySelector('[data-submit]');
+            if (submit) {
+                submit.disabled = true;
+                submit.setAttribute('aria-busy', 'true');
+            }
+        }
     });
 
     update();

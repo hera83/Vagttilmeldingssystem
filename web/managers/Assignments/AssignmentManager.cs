@@ -1,4 +1,5 @@
 using web.Data.Models;
+using web.Infrastructure.Realtime;
 using web.Managers.Assignments.Dtos;
 using web.Managers.Assignments.Interfaces;
 using web.Repositories.Assignments.Dtos;
@@ -13,7 +14,8 @@ public class AssignmentManager(
     IShiftRepository shiftRepository,
     IEventRepository eventRepository,
     IUserRepository userRepository,
-    IAssignmentRepository assignmentRepository) : IAssignmentManager
+    IAssignmentRepository assignmentRepository,
+    IShiftUpdatesNotifier notifier) : IAssignmentManager
 {
     public const int MaxCandidates = 50;
 
@@ -73,6 +75,7 @@ public class AssignmentManager(
 
         if (result.Succeeded)
         {
+            await PublishAsync(shiftId, userId, cancellationToken);
             return AssignUserResult.Success;
         }
 
@@ -92,8 +95,30 @@ public class AssignmentManager(
             return UnassignResult.NotFound;
         }
 
-        return await assignmentRepository.CancelAsync(assignmentId, removedByUserId, cancellationToken) is null
-            ? UnassignResult.NotFound
-            : UnassignResult.Success;
+        if (await assignmentRepository.CancelAsync(assignmentId, removedByUserId, cancellationToken) is null)
+        {
+            return UnassignResult.NotFound;
+        }
+
+        await PublishAsync(shiftId, assignment.UserId, cancellationToken);
+        return UnassignResult.Success;
+    }
+
+    // Efter commit. En kladdes id sendes kun til administratorer og til den berørte bruger personligt (krav K10).
+    private async Task PublishAsync(Guid shiftId, Guid userId, CancellationToken cancellationToken)
+    {
+        var shift = await shiftRepository.GetByIdAsync(shiftId, cancellationToken);
+        if (shift is null)
+        {
+            return;
+        }
+
+        await notifier.PublishAsync(new ShiftUpdate
+        {
+            EventId = shift.EventId,
+            ShiftIds = [shiftId],
+            IsPublic = shift.Status == ShiftStatus.Open,
+            AffectedUserIds = [userId]
+        }, cancellationToken);
     }
 }

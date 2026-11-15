@@ -26,7 +26,7 @@
 }
 
 <div class="grid grid-2">
-    <section class="card" aria-labelledby="assignees-title">
+    <section class="card" aria-labelledby="assignees-title" data-live-region="assignees" data-live-on="eventChanged" data-live-event-id="@Model.EventId">
         <div class="card-header">
             <span class="card-icon"><icon name="users" /></span>
             <div>
@@ -74,6 +74,7 @@
             <button type="submit" class="btn btn-ghost"><icon name="search" /><span class="hide-sm">Søg</span></button>
         </form>
 
+        <div data-live-region="candidates" data-live-on="eventChanged" data-live-event-id="@Model.EventId">
         @if (Model.IsFull)
         {
             <div class="alert alert-warning mb-0"><icon name="alert-triangle" /><p>Vagten er fuld. Fjern en person, eller sæt antallet af pladser op under <a asp-action="Edit" asp-route-id="@Model.ShiftId">Ret vagt</a>.</p></div>
@@ -104,5 +105,6 @@
                 <p class="muted small mt-1">Viser @Model.Candidates.Count af @Model.CandidateTotal. Søg for at finde andre.</p>
             }
         }
+        </div>
     </section>
 </div>
