@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using web.Infrastructure.Authentication;
+using web.Managers.Assignments.Dtos;
+using web.Managers.Assignments.Interfaces;
 using web.Managers.Planning.Dtos;
 using web.Managers.Planning.Interfaces;
 using web.ViewModels.Shifts;
@@ -8,7 +10,7 @@ using web.ViewModels.Shifts;
 namespace web.Controllers;
 
 [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
-public class ShiftsController(IPlanningManager planningManager) : Controller
+public class ShiftsController(IPlanningManager planningManager, IAssignmentManager assignmentManager) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Create(Guid eventId, CancellationToken cancellationToken)
@@ -76,18 +78,20 @@ public class ShiftsController(IPlanningManager planningManager) : Controller
         if (ModelState.IsValid)
         {
             var result = await planningManager.UpdateShiftAsync(id, model.ToUpdateShiftDto(), cancellationToken);
-            if (result == PlanningResult.Success)
+            switch (result)
             {
-                TempData["Success"] = $"Vagten {model.Title} er gemt.";
-                return RedirectToAction(nameof(EventsController.Details), "Events", new { id = editor.Event.Id });
+                case PlanningResult.Success:
+                    TempData["Success"] = $"Vagten {model.Title} er gemt.";
+                    return RedirectToAction(nameof(EventsController.Details), "Events", new { id = editor.Event.Id });
+                case PlanningResult.ShiftNotFound:
+                    return NotFound();
+                case PlanningResult.CapacityBelowTaken:
+                    ModelState.AddModelError(nameof(model.Capacity), "Der er allerede flere personer på vagten end det nye antal pladser. Fjern nogen under Tildel først.");
+                    break;
+                default:
+                    ModelState.AddModelError(nameof(model.Date), ShiftsViewModelMapper.OutsidePeriodMessage(editor.Event));
+                    break;
             }
-
-            if (result == PlanningResult.ShiftNotFound)
-            {
-                return NotFound();
-            }
-
-            ModelState.AddModelError(nameof(model.Date), ShiftsViewModelMapper.OutsidePeriodMessage(editor.Event));
         }
 
         model.FillDisplayFields(editor);
@@ -109,7 +113,69 @@ public class ShiftsController(IPlanningManager planningManager) : Controller
             return NotFound();
         }
 
-        TempData["Success"] = $"Vagten {editor.Shift.Title} er slettet.";
+        if (result == PlanningResult.ShiftHasAssignments)
+        {
+            TempData["Error"] = $"Vagten {editor.Shift.Title} har personer på og kan ikke slettes. Fjern dem under Tildel først.";
+        }
+        else
+        {
+            TempData["Success"] = $"Vagten {editor.Shift.Title} er slettet.";
+        }
+
         return RedirectToAction(nameof(EventsController.Details), "Events", new { id = editor.Event.Id });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Assign(Guid id, string? q, CancellationToken cancellationToken)
+    {
+        var overview = await assignmentManager.GetAssignOverviewAsync(id, q, cancellationToken);
+        if (overview is null)
+        {
+            return NotFound();
+        }
+
+        return View(overview.ToAssignShiftsViewModel(q, UserPrincipalFactory.GetUserId(User)));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Assign(Guid id, Guid userId, string? q, CancellationToken cancellationToken)
+    {
+        if (UserPrincipalFactory.GetUserId(User) is not { } adminId)
+        {
+            return Challenge();
+        }
+
+        var result = await assignmentManager.AssignAsync(id, userId, adminId, cancellationToken);
+        switch (result)
+        {
+            case AssignUserResult.ShiftNotFound:
+                return NotFound();
+            case AssignUserResult.Success:
+                TempData["Success"] = "Brugeren er sat på vagten.";
+                break;
+            default:
+                TempData["Error"] = ShiftsViewModelMapper.AssignErrorMessage(result);
+                break;
+        }
+
+        return RedirectToAction(nameof(Assign), new { id, q });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Unassign(Guid id, Guid assignmentId, CancellationToken cancellationToken)
+    {
+        if (UserPrincipalFactory.GetUserId(User) is not { } adminId)
+        {
+            return Challenge();
+        }
+
+        var result = await assignmentManager.UnassignAsync(id, assignmentId, adminId, cancellationToken);
+        if (result == UnassignResult.NotFound)
+        {
+            return NotFound();
+        }
+
+        TempData["Success"] = "Brugeren er fjernet fra vagten. Pladsen er ledig igen.";
+        return RedirectToAction(nameof(Assign), new { id });
     }
 }

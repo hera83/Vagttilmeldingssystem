@@ -1,0 +1,26 @@
+@model web.ViewModels.MyShifts.MyShiftItemViewModel
+<a class="item-row shift-row @(Model.IsPast ? "is-past" : "")" asp-action="Details" asp-route-id="@Model.ShiftId">
+    <span class="date-tile" aria-hidden="true">
+        <span class="wd">@Model.WeekdayShort</span>
+        <span class="d">@Model.DayNumber</span>
+        <span class="m">@Model.MonthShort</span>
+    </span>
+    <span class="item-main">
+        <strong>@Model.EventName</strong>
+        <span class="meta">
+            <span class="visually-hidden">@Model.DateText</span>
+            <span><icon name="clock" />@Model.TimeText</span>
+            <span><icon name="map-pin" />@Model.Location</span>
+        </span>
+        <span class="meta"><span><icon name="list" />Vagt: @Model.Title</span></span>
+    </span>
+    @if (Model.IsPast)
+    {
+        <span class="badge badge-success"><icon name="check" />Afholdt</span>
+    }
+    else if (Model.IsAdminAssigned)
+    {
+        <span class="badge badge-info"><icon name="shield" />Tildelt af administrator</span>
+    }
+    <icon name="chevron-right" class="item-chevron" />
+</a>

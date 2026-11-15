@@ -70,7 +70,7 @@
                             <th scope="col">Vagt</th>
                             <th scope="col">Dato</th>
                             <th scope="col">Tid</th>
-                            <th scope="col" class="num">Pladser</th>
+                            <th scope="col">Besat</th>
                             <th scope="col">Status</th>
                             <th scope="col"><span class="visually-hidden">Handlinger</span></th>
                         </tr>
@@ -82,9 +82,15 @@
                                 <td class="cell-main"><strong>@shift.Title</strong></td>
                                 <td data-label="Dato" class="nowrap">@shift.DateText</td>
                                 <td data-label="Tid" class="nowrap">@shift.TimeText</td>
-                                <td data-label="Pladser" class="num">@shift.Capacity</td>
+                                <td data-label="Besat">
+                                    <span class="taken">
+                                        <span>@shift.Taken af @shift.Capacity</span>
+                                        <progress class="progress @(shift.Taken >= shift.Capacity ? "is-full" : "")" max="@shift.Capacity" value="@shift.Taken" aria-hidden="true"></progress>
+                                    </span>
+                                </td>
                                 <td data-label="Status"><partial name="_ShiftStatusBadgePartial" model="shift.IsOpen" /></td>
                                 <td class="actions">
+                                    <a class="btn btn-ghost btn-sm" asp-controller="Shifts" asp-action="Assign" asp-route-id="@shift.Id" title="Tildel"><icon name="user-plus" /><span class="btn-label">Tildel</span><span class="visually-hidden"> personer til @shift.Title</span></a>
                                     <a class="btn btn-ghost btn-sm" asp-controller="Shifts" asp-action="Edit" asp-route-id="@shift.Id" title="Ret"><icon name="edit" /><span class="btn-label">Ret</span><span class="visually-hidden"> @shift.Title</span></a>
                                     <form asp-controller="Shifts" asp-action="Delete" asp-route-id="@shift.Id" method="post" data-confirm="Vil du slette vagten @shift.Title? Det kan ikke fortrydes.">
                                         <button type="submit" class="btn btn-danger btn-sm" title="Slet"><icon name="trash" /><span class="btn-label">Slet</span><span class="visually-hidden"> @shift.Title</span></button>

@@ -1,12 +1,26 @@
 using web.Managers.Members.Dtos;
 using web.Managers.Members.Interfaces;
+using web.Repositories.Assignments.Interfaces;
 using web.Repositories.Profiles.Interfaces;
 using web.Repositories.Users.Interfaces;
 
 namespace web.Managers.Members;
 
-public class MemberManager(IUserRepository userRepository, IProfileRepository profileRepository) : IMemberManager
+public class MemberManager(
+    IUserRepository userRepository,
+    IProfileRepository profileRepository,
+    IAssignmentRepository assignmentRepository) : IMemberManager
 {
+    public async Task<DeleteMemberResult> DeleteMemberAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        if (await assignmentRepository.AnyForUserAsync(userId, cancellationToken))
+        {
+            return DeleteMemberResult.HasAssignments;
+        }
+
+        return await userRepository.DeleteAsync(userId, cancellationToken) ? DeleteMemberResult.Deleted : DeleteMemberResult.NotFound;
+    }
+
     public async Task<List<MemberDto>> GetMembersAsync(CancellationToken cancellationToken = default)
     {
         var users = await userRepository.GetAllAsync(cancellationToken);

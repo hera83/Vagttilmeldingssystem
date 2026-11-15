@@ -14,7 +14,9 @@ public interface IShiftRepository
 
     Task<ShiftDto> CreateAsync(Guid eventId, CreateShiftDto dto, CancellationToken cancellationToken = default);
 
-    Task<ShiftDto?> UpdateAsync(Guid id, UpdateShiftDto dto, CancellationToken cancellationToken = default);
+    /// <summary>Retter vagten. Afvises med CapacityBelowTaken, hvis kapaciteten bliver lavere end antal aktive tildelinger (tjekket i samme transaktion).</summary>
+    Task<ShiftChangeResultDto> UpdateAsync(Guid id, UpdateShiftDto dto, CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <summary>Sletter vagten (og dens afmeldte historik). Afvises med HasActiveAssignments, hvis nogen er på vagten (tjekket i samme transaktion).</summary>
+    Task<ShiftChangeResultDto> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

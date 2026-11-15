@@ -45,6 +45,7 @@ public static class EventsViewModelMapper
             DateText = x.StartUtc.ToDanishDateText(),
             TimeText = DateTimeExtensions.ToDanishTimeRangeText(x.StartUtc, x.EndUtc),
             Capacity = x.Capacity,
+            Taken = overview.TakenCounts.GetValueOrDefault(x.Id),
             IsOpen = x.Status == ShiftStatus.Open
         }).ToList(),
         DraftCount = overview.DraftCount,

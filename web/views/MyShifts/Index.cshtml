@@ -1,0 +1,94 @@
+@model web.ViewModels.MyShifts.IndexMyShiftsViewModel
+@{
+    ViewData["Title"] = "Mine vagter";
+}
+<div class="page-header">
+    <div>
+        <h1>Mine vagter</h1>
+        <p>Dit personlige overblik over de vagter, du er på, også dem administratoren har sat dig på.</p>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <icon name="lock" />
+    <p>Dine vagter er låst til dig. Bliver du forhindret, fx ved sygdom, så kontakt administratoren. Kun administratoren kan fjerne dig fra en vagt.</p>
+</div>
+
+<div class="grid grid-calendar">
+    <section class="card" aria-labelledby="calendar-title">
+        <div class="calendar-header">
+            <a class="btn btn-ghost btn-sm" asp-action="Index" asp-route-month="@Model.Calendar.PreviousMonth" title="Forrige måned"><icon name="chevron-left" /><span class="visually-hidden">Forrige måned</span></a>
+            <h2 id="calendar-title">@Model.Calendar.MonthTitle</h2>
+            <a class="btn btn-ghost btn-sm" asp-action="Index" asp-route-month="@Model.Calendar.NextMonth" title="Næste måned"><icon name="chevron-right" /><span class="visually-hidden">Næste måned</span></a>
+        </div>
+        <table class="calendar">
+            <thead>
+                <tr>
+                    <th scope="col" abbr="mandag">Ma</th>
+                    <th scope="col" abbr="tirsdag">Ti</th>
+                    <th scope="col" abbr="onsdag">On</th>
+                    <th scope="col" abbr="torsdag">To</th>
+                    <th scope="col" abbr="fredag">Fr</th>
+                    <th scope="col" abbr="lørdag">Lø</th>
+                    <th scope="col" abbr="søndag">Sø</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var week in Model.Calendar.Weeks)
+                {
+                    <tr>
+                        @foreach (var day in week)
+                        {
+                            var css = (day.InMonth ? "" : "out ") + (day.IsToday ? "today " : "") + (day.UpcomingCount > 0 ? "has-upcoming " : day.PastCount > 0 ? "has-past " : "");
+                            <td class="@css.Trim()">
+                                <span class="day" aria-hidden="true">@day.Day</span>
+                                <span class="visually-hidden">@day.DateText@(day.UpcomingCount > 0 ? $": {day.UpcomingCount} kommende vagt{(day.UpcomingCount > 1 ? "er" : "")}" : "")@(day.PastCount > 0 ? $": {day.PastCount} afholdt vagt{(day.PastCount > 1 ? "er" : "")}" : "")</span>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <ul class="legend">
+            <li><span class="dot dot-upcoming"></span>Kommende vagt</li>
+            <li><span class="dot dot-past"></span>Afholdt vagt</li>
+            <li><span class="dot dot-today"></span>I dag</li>
+        </ul>
+    </section>
+
+    <div>
+        <section class="section" aria-labelledby="upcoming-title">
+            <h2 id="upcoming-title" class="list-title"><icon name="calendar" />Kommende vagter (@Model.Upcoming.Count)</h2>
+            @if (Model.Upcoming.Count == 0)
+            {
+                <div class="card empty-state">
+                    <icon name="calendar" />
+                    <h3>Du har ingen kommende vagter</h3>
+                    <p>Når der åbnes for tilmelding, kan du vælge vagter. Vagter, administratoren sætter dig på, kommer også her.</p>
+                </div>
+            }
+            else
+            {
+                <ul class="item-list">
+                    @foreach (var shift in Model.Upcoming)
+                    {
+                        <li><partial name="_MyShiftItemPartial" model="shift" /></li>
+                    }
+                </ul>
+            }
+        </section>
+
+        @if (Model.Past.Count > 0)
+        {
+            <section class="section" aria-labelledby="past-title">
+                <h2 id="past-title" class="list-title"><icon name="check-circle" />Afholdte vagter (@Model.Past.Count)</h2>
+                <ul class="item-list">
+                    @foreach (var shift in Model.Past)
+                    {
+                        <li><partial name="_MyShiftItemPartial" model="shift" /></li>
+                    }
+                </ul>
+            </section>
+        }
+    </div>
+</div>

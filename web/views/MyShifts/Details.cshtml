@@ -1,0 +1,61 @@
+@model web.ViewModels.MyShifts.DetailsMyShiftsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<a class="back-link" asp-action="Index"><icon name="arrow-left" />Tilbage til Mine vagter</a>
+<div class="page-header">
+    <div>
+        <h1>@Model.Title</h1>
+        <p class="meta">
+            <span><icon name="calendar" />@Model.EventName</span>
+            @if (Model.IsPast)
+            {
+                <span class="badge badge-success"><icon name="check" />Afholdt</span>
+            }
+            else
+            {
+                <span class="badge badge-info"><icon name="clock" />Kommende</span>
+            }
+        </p>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <section class="card" aria-labelledby="details-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="calendar" /></span>
+            <div><h2 id="details-title">Vagtdetaljer</h2></div>
+        </div>
+        <dl class="details">
+            <dt>Dato</dt><dd>@Model.DateText</dd>
+            <dt>Tid</dt><dd>@Model.TimeText (@Model.DurationText)</dd>
+            <dt>Mødested</dt><dd>@Model.Location</dd>
+            <dt>Vagt</dt><dd>@Model.Title</dd>
+            <dt>Begivenhed</dt><dd>@Model.EventName</dd>
+            <dt>Oplysninger</dt><dd class="pre-line">@(string.IsNullOrWhiteSpace(Model.Description) ? "Ingen yderligere oplysninger." : Model.Description)</dd>
+        </dl>
+    </section>
+
+    <section class="card" aria-labelledby="lock-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="lock" /></span>
+            <div><h2 id="lock-title">Din plads</h2></div>
+        </div>
+        <p>
+            @if (Model.IsAdminAssigned)
+            {
+                <span class="badge badge-info"><icon name="shield" />Tildelt af administrator</span>
+            }
+            else
+            {
+                <span class="badge badge-success"><icon name="check" />Selv tilmeldt</span>
+            }
+            <span class="muted small">@Model.AssignedText</span>
+        </p>
+        @if (Model.IsNotPublishedYet)
+        {
+            <p>Administratoren har sat dig på vagten, før der er åbnet for tilmelding for alle.</p>
+        }
+        <p>Vagten er låst til dig. Du kan ikke selv afmelde dig, bytte eller give vagten videre. Bliver du forhindret, så kontakt administratoren.</p>
+    </section>
+</div>

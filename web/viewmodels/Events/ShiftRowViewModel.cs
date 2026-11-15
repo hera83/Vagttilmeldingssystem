@@ -8,5 +8,6 @@ public class ShiftRowViewModel
     public string DateText { get; set; } = string.Empty;
     public string TimeText { get; set; } = string.Empty;
     public int Capacity { get; set; }
+    public int Taken { get; set; }
     public bool IsOpen { get; set; }
 }

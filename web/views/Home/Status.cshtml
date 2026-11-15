@@ -3,6 +3,7 @@
     ViewData["Title"] = Model.StatusCode switch
     {
         404 => "Siden findes ikke",
+        405 => "Handlingen findes ikke",
         400 => "Forespørgslen kunne ikke behandles",
         429 => "For mange forsøg",
         _ => "Fejl"

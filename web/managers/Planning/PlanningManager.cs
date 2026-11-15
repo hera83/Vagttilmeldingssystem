@@ -2,6 +2,7 @@ using web.Data.Models;
 using web.Extensions;
 using web.Managers.Planning.Dtos;
 using web.Managers.Planning.Interfaces;
+using web.Repositories.Assignments.Interfaces;
 using web.Repositories.Events.Dtos;
 using web.Repositories.Events.Interfaces;
 using web.Repositories.Shifts.Dtos;
@@ -9,7 +10,10 @@ using web.Repositories.Shifts.Interfaces;
 
 namespace web.Managers.Planning;
 
-public class PlanningManager(IEventRepository eventRepository, IShiftRepository shiftRepository) : IPlanningManager
+public class PlanningManager(
+    IEventRepository eventRepository,
+    IShiftRepository shiftRepository,
+    IAssignmentRepository assignmentRepository) : IPlanningManager
 {
     public Task<EventDto?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default) =>
         eventRepository.GetByIdAsync(eventId, cancellationToken);
@@ -28,7 +32,8 @@ public class PlanningManager(IEventRepository eventRepository, IShiftRepository 
             Event = item,
             Shifts = statusFilter is null ? shifts : shifts.Where(x => x.Status == statusFilter).ToList(),
             DraftCount = shifts.Count(x => x.Status == ShiftStatus.Draft),
-            OpenCount = shifts.Count(x => x.Status == ShiftStatus.Open)
+            OpenCount = shifts.Count(x => x.Status == ShiftStatus.Open),
+            TakenCounts = await assignmentRepository.GetActiveCountsAsync(shifts.Select(x => x.Id), cancellationToken)
         };
     }
 
@@ -74,13 +79,25 @@ public class PlanningManager(IEventRepository eventRepository, IShiftRepository 
             return PlanningResult.OutsideEventPeriod;
         }
 
-        return await shiftRepository.UpdateAsync(shiftId, dto, cancellationToken) is null
-            ? PlanningResult.ShiftNotFound
-            : PlanningResult.Success;
+        var result = await shiftRepository.UpdateAsync(shiftId, dto, cancellationToken);
+        return result.Status switch
+        {
+            ShiftChangeStatus.Success => PlanningResult.Success,
+            ShiftChangeStatus.CapacityBelowTaken => PlanningResult.CapacityBelowTaken,
+            _ => PlanningResult.ShiftNotFound
+        };
     }
 
-    public async Task<PlanningResult> DeleteShiftAsync(Guid shiftId, CancellationToken cancellationToken = default) =>
-        await shiftRepository.DeleteAsync(shiftId, cancellationToken) ? PlanningResult.Success : PlanningResult.ShiftNotFound;
+    public async Task<PlanningResult> DeleteShiftAsync(Guid shiftId, CancellationToken cancellationToken = default)
+    {
+        var result = await shiftRepository.DeleteAsync(shiftId, cancellationToken);
+        return result.Status switch
+        {
+            ShiftChangeStatus.Success => PlanningResult.Success,
+            ShiftChangeStatus.HasActiveAssignments => PlanningResult.ShiftHasAssignments,
+            _ => PlanningResult.ShiftNotFound
+        };
+    }
 
     public async Task<PlanningResult> DeleteEventAsync(Guid eventId, CancellationToken cancellationToken = default)
     {

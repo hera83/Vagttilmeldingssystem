@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using web.Data.Models;
 using web.Extensions;
+using web.Managers.Assignments.Dtos;
 using web.Managers.Planning.Dtos;
 using web.Repositories.Events.Dtos;
 using web.Repositories.Shifts.Dtos;
@@ -76,6 +77,45 @@ public static class ShiftsViewModelMapper
             Capacity = model.Capacity!.Value
         };
     }
+
+    public static AssignShiftsViewModel ToAssignShiftsViewModel(this AssignOverviewDto overview, string? search, Guid? currentUserId) => new()
+    {
+        ShiftId = overview.Shift.Id,
+        ShiftTitle = overview.Shift.Title,
+        EventId = overview.Event.Id,
+        EventName = overview.Event.Name,
+        DateText = overview.Shift.StartUtc.ToDanishDateText(),
+        TimeText = DateTimeExtensions.ToDanishTimeRangeText(overview.Shift.StartUtc, overview.Shift.EndUtc),
+        Capacity = overview.Shift.Capacity,
+        Taken = overview.Assignees.Count,
+        IsOpen = overview.Shift.Status == ShiftStatus.Open,
+        Search = search,
+        Assignees = overview.Assignees.Select(x => new AssigneeRowViewModel
+        {
+            AssignmentId = x.AssignmentId,
+            DisplayName = x.DisplayName,
+            UserName = x.UserName,
+            IsAdminAssigned = x.Source == AssignmentSource.Admin,
+            IsCurrentUser = x.UserId == currentUserId,
+            AssignedText = x.CreatedAt.ToDanishShortDateTimeText()
+        }).ToList(),
+        Candidates = overview.Candidates.Select(x => new CandidateRowViewModel
+        {
+            UserId = x.Id,
+            DisplayName = x.DisplayName,
+            UserName = x.UserName,
+            IsCurrentUser = x.Id == currentUserId
+        }).ToList(),
+        CandidateTotal = overview.CandidateTotal
+    };
+
+    public static string AssignErrorMessage(AssignUserResult result) => result switch
+    {
+        AssignUserResult.Full => "Vagten er fuld. Fjern en person, eller sæt antallet af pladser op under Ret.",
+        AssignUserResult.AlreadyAssigned => "Brugeren er allerede på vagten.",
+        AssignUserResult.UserInactive => "Brugeren er deaktiveret og kan ikke sættes på vagter.",
+        _ => "Brugeren findes ikke."
+    };
 
     public static string OutsidePeriodMessage(EventDto item) =>
         $"Datoen skal ligge i begivenhedens periode ({DateTimeExtensions.ToDanishPeriodText(item.StartDate, item.EndDate)}).";

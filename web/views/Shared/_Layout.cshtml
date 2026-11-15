@@ -27,6 +27,7 @@
             {
                 <nav class="topnav" aria-label="Hovedmenu">
                     <a asp-controller="Home" asp-action="Index" aria-current="@Current("Home")"><icon name="home" />Forside</a>
+                    <a asp-controller="MyShifts" asp-action="Index" aria-current="@Current("MyShifts")"><icon name="calendar" />Mine vagter</a>
                     <a asp-controller="Profile" asp-action="Index" aria-current="@Current("Profile")"><icon name="user" />Min profil</a>
                 </nav>
                 <div class="user-menu">
@@ -69,6 +70,7 @@
     {
         <nav class="bottomnav" aria-label="Menu">
             <a asp-controller="Home" asp-action="Index" aria-current="@Current("Home")"><icon name="home" /><span>Forside</span></a>
+            <a asp-controller="MyShifts" asp-action="Index" aria-current="@Current("MyShifts")"><icon name="calendar" /><span>Mine vagter</span></a>
             <a asp-controller="Profile" asp-action="Index" aria-current="@Current("Profile")"><icon name="user" /><span>Profil</span></a>
         </nav>
     }

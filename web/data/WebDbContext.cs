@@ -9,6 +9,7 @@ public class WebDbContext(DbContextOptions<WebDbContext> options) : DbContext(op
     public DbSet<Profile> Profiles => Set<Profile>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<Assignment> Assignments => Set<Assignment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

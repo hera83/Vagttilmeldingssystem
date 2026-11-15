@@ -1,0 +1,108 @@
+@model web.ViewModels.Shifts.AssignShiftsViewModel
+@{
+    ViewData["Title"] = $"Tildel: {Model.ShiftTitle}";
+}
+<a class="back-link" asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId"><icon name="arrow-left" />Tilbage til @Model.EventName</a>
+<div class="page-header">
+    <div>
+        <h1>@Model.ShiftTitle</h1>
+        <p class="meta">
+            <span><icon name="calendar" />@Model.DateText</span>
+            <span><icon name="clock" />@Model.TimeText</span>
+            <span><partial name="_ShiftStatusBadgePartial" model="Model.IsOpen" /></span>
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@Model.ShiftId"><icon name="edit" />Ret vagt</a>
+    </div>
+</div>
+
+@if (!Model.IsOpen)
+{
+    <div class="alert alert-info">
+        <icon name="eye-off" />
+        <p><strong>Forhåndstildeling i det skjulte.</strong> Vagten er en kladde. Kun de personer, du sætter på, kan se den i deres egen kalender. Resten af planen er skjult for forældrene.</p>
+    </div>
+}
+
+<div class="grid grid-2">
+    <section class="card" aria-labelledby="assignees-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="users" /></span>
+            <div>
+                <h2 id="assignees-title">På vagten (@Model.Taken af @Model.Capacity)</h2>
+                <progress class="progress" max="@Model.Capacity" value="@Model.Taken" aria-label="@Model.Taken af @Model.Capacity pladser er besat">@Model.Taken af @Model.Capacity</progress>
+            </div>
+        </div>
+
+        @if (Model.Assignees.Count == 0)
+        {
+            <p class="muted">Ingen er på vagten endnu.</p>
+        }
+        else
+        {
+            <ul class="person-list">
+                @foreach (var person in Model.Assignees)
+                {
+                    <li>
+                        <span class="person-main">
+                            <strong>@person.DisplayName@(person.IsCurrentUser ? " (dig)" : "")</strong>
+                            <span class="muted small">@person.UserName · @(person.IsAdminAssigned ? "Tildelt af administrator" : "Selv tilmeldt") @person.AssignedText</span>
+                        </span>
+                        <form asp-action="Unassign" asp-route-id="@Model.ShiftId" method="post" data-confirm="Vil du fjerne @person.DisplayName fra vagten? Pladsen bliver ledig igen.">
+                            <input type="hidden" name="assignmentId" value="@person.AssignmentId" />
+                            <button type="submit" class="btn btn-danger btn-sm"><icon name="x" />Fjern<span class="visually-hidden"> @person.DisplayName</span></button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="candidates-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="user-plus" /></span>
+            <div>
+                <h2 id="candidates-title">Tildel en person</h2>
+                <p>Søg på navn eller e-mail. Du kan også tildele dig selv.</p>
+            </div>
+        </div>
+
+        <form asp-action="Assign" asp-route-id="@Model.ShiftId" method="get" class="search mb-1" role="search">
+            <label for="q" class="visually-hidden">Søg efter person</label>
+            <input id="q" name="q" type="search" value="@Model.Search" placeholder="Søg efter navn eller e-mail …" />
+            <button type="submit" class="btn btn-ghost"><icon name="search" /><span class="hide-sm">Søg</span></button>
+        </form>
+
+        @if (Model.IsFull)
+        {
+            <div class="alert alert-warning mb-0"><icon name="alert-triangle" /><p>Vagten er fuld. Fjern en person, eller sæt antallet af pladser op under <a asp-action="Edit" asp-route-id="@Model.ShiftId">Ret vagt</a>.</p></div>
+        }
+        else if (Model.Candidates.Count == 0)
+        {
+            <p class="muted">Ingen aktive brugere matcher.</p>
+        }
+        else
+        {
+            <ul class="person-list">
+                @foreach (var person in Model.Candidates)
+                {
+                    <li>
+                        <span class="person-main">
+                            <strong>@person.DisplayName@(person.IsCurrentUser ? " (dig)" : "")</strong>
+                            <span class="muted small">@person.UserName</span>
+                        </span>
+                        <form asp-action="Assign" asp-route-id="@Model.ShiftId" asp-route-q="@Model.Search" method="post">
+                            <input type="hidden" name="userId" value="@person.UserId" />
+                            <button type="submit" class="btn btn-secondary btn-sm"><icon name="plus" />Tildel<span class="visually-hidden"> @person.DisplayName</span></button>
+                        </form>
+                    </li>
+                }
+            </ul>
+            @if (Model.CandidateTotal > Model.Candidates.Count)
+            {
+                <p class="muted small mt-1">Viser @Model.Candidates.Count af @Model.CandidateTotal. Søg for at finde andre.</p>
+            }
+        }
+    </section>
+</div>

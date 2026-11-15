@@ -16,10 +16,14 @@ using web.Data.Seeds;
 using web.Infrastructure.Authentication;
 using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
+using web.Managers.Assignments;
+using web.Managers.Assignments.Interfaces;
 using web.Managers.Members;
 using web.Managers.Members.Interfaces;
 using web.Managers.Planning;
 using web.Managers.Planning.Interfaces;
+using web.Repositories.Assignments;
+using web.Repositories.Assignments.Interfaces;
 using web.Repositories.Events;
 using web.Repositories.Events.Interfaces;
 using web.Repositories.Logs;
@@ -132,10 +136,12 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
+builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 
 // Managers
 builder.Services.AddScoped<IMemberManager, MemberManager>();
 builder.Services.AddScoped<IPlanningManager, PlanningManager>();
+builder.Services.AddScoped<IAssignmentManager, AssignmentManager>();
 
 // Eksterne services
 

@@ -10,4 +10,7 @@ public class EventOverviewDto
     public List<ShiftDto> Shifts { get; set; } = [];
     public int DraftCount { get; set; }
     public int OpenCount { get; set; }
+
+    /// <summary>Antal aktive tildelinger pr. vagt-id (vagter uden tildelinger mangler = 0).</summary>
+    public Dictionary<Guid, int> TakenCounts { get; set; } = [];
 }

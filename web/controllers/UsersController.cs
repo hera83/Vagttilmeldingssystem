@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using web.Infrastructure.Authentication;
+using web.Managers.Members.Dtos;
 using web.Managers.Members.Interfaces;
 using web.Repositories.Users.Dtos;
 using web.Repositories.Users.Interfaces;
@@ -160,12 +161,15 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
             return BadRequest();
         }
 
-        if (!await userRepository.DeleteAsync(id, cancellationToken))
+        var result = await memberManager.DeleteMemberAsync(id, cancellationToken);
+        if (result == DeleteMemberResult.NotFound)
         {
             return NotFound();
         }
 
-        TempData["Success"] = "Brugeren er slettet.";
+        TempData[result == DeleteMemberResult.Deleted ? "Success" : "Error"] = result == DeleteMemberResult.Deleted
+            ? "Brugeren er slettet."
+            : "Brugeren har vagter og kan ikke slettes, så historikken bevares. Deaktivér brugeren i stedet under Ret.";
         return RedirectToAction(nameof(Index));
     }
 }
