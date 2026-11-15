@@ -1,0 +1,76 @@
+@model web.ViewModels.Events.IndexEventsViewModel
+@{
+    ViewData["Title"] = "Begivenheder";
+}
+<div class="page-header">
+    <div>
+        <h1>Begivenheder</h1>
+        <p>Opret og administrér begivenheder, fx en skolefest eller en arbejdslørdag. Vagterne oprettes under hver begivenhed.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Create"><icon name="plus" />Opret begivenhed</a>
+    </div>
+</div>
+
+<div class="toolbar">
+    <nav class="tabs" aria-label="Vis begivenheder">
+        <a asp-action="Index" asp-route-q="@Model.Query" aria-current="@(Model.ShowArchived ? null : "page")">Aktive <span class="count">@Model.ActiveCount</span></a>
+        <a asp-action="Index" asp-route-archived="true" asp-route-q="@Model.Query" aria-current="@(Model.ShowArchived ? "page" : null)">Arkiverede <span class="count">@Model.ArchivedCount</span></a>
+    </nav>
+    <form asp-action="Index" method="get" class="search" role="search">
+        @if (Model.ShowArchived)
+        {
+            <input type="hidden" name="archived" value="true" />
+        }
+        <label for="q" class="visually-hidden">Søg efter begivenhed</label>
+        <input id="q" name="q" type="search" value="@Model.Query" placeholder="Søg efter navn eller sted …" />
+        <button type="submit" class="btn btn-ghost"><icon name="search" /><span class="hide-sm">Søg</span></button>
+    </form>
+</div>
+
+@if (Model.Events.Count == 0)
+{
+    <div class="card empty-state">
+        <icon name="calendar" />
+        @if (!string.IsNullOrWhiteSpace(Model.Query))
+        {
+            <h2>Ingen begivenheder matcher »@Model.Query«</h2>
+            <p><a asp-action="Index" asp-route-archived="@(Model.ShowArchived ? "true" : null)">Vis alle</a></p>
+        }
+        else if (Model.ShowArchived)
+        {
+            <h2>Der er ingen arkiverede begivenheder</h2>
+        }
+        else
+        {
+            <h2>Der er ingen begivenheder endnu</h2>
+            <p>Opret den første begivenhed, fx "Skolefest".</p>
+            <a class="btn btn-primary" asp-action="Create"><icon name="plus" />Opret begivenhed</a>
+        }
+    </div>
+}
+else
+{
+    <ul class="item-list" aria-label="@(Model.ShowArchived ? "Arkiverede begivenheder" : "Aktive begivenheder")">
+        @foreach (var item in Model.Events)
+        {
+            <li>
+                <a class="item-row" asp-action="Details" asp-route-id="@item.Id">
+                    <span class="card-icon"><icon name="calendar" /></span>
+                    <span class="item-main">
+                        <strong>@item.Name</strong>
+                        <span class="meta">
+                            <span><icon name="calendar" />@item.PeriodText</span>
+                            <span><icon name="map-pin" />@item.Location</span>
+                        </span>
+                    </span>
+                    @if (item.IsArchived)
+                    {
+                        <span class="badge badge-neutral"><icon name="archive" />Arkiveret</span>
+                    }
+                    <icon name="chevron-right" class="item-chevron" />
+                </a>
+            </li>
+        }
+    </ul>
+}

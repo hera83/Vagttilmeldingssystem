@@ -1,0 +1,52 @@
+@model web.ViewModels.Events.EditEventsViewModel
+@{
+    ViewData["Title"] = "Ret begivenhed";
+}
+<a class="back-link" asp-action="Details" asp-route-id="@Model.Id"><icon name="arrow-left" />Tilbage til begivenheden</a>
+<div class="page-header">
+    <div>
+        <h1>Ret begivenhed</h1>
+    </div>
+</div>
+
+<div class="card form">
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div class="field">
+            <label asp-for="Name" class="required"></label>
+            <input asp-for="Name" />
+            <span asp-validation-for="Name"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Location" class="required"></label>
+            <input asp-for="Location" />
+            <span asp-validation-for="Location"></span>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label asp-for="StartDate" class="required"></label>
+                <input asp-for="StartDate" type="date" />
+                <span asp-validation-for="StartDate"></span>
+            </div>
+            <div class="field">
+                <label asp-for="EndDate" class="required"></label>
+                <input asp-for="EndDate" type="date" />
+                <span asp-validation-for="EndDate"></span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label asp-for="Description"></label>
+            <textarea asp-for="Description" rows="4"></textarea>
+            <span asp-validation-for="Description"></span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><icon name="check" />Gem</button>
+            <a class="btn btn-ghost" asp-action="Details" asp-route-id="@Model.Id">Annuller</a>
+        </div>
+    </form>
+</div>

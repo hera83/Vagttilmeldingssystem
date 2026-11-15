@@ -1,0 +1,54 @@
+@model web.ViewModels.Events.CreateEventsViewModel
+@{
+    ViewData["Title"] = "Opret begivenhed";
+}
+<a class="back-link" asp-action="Index"><icon name="arrow-left" />Tilbage til begivenheder</a>
+<div class="page-header">
+    <div>
+        <h1>Opret begivenhed</h1>
+        <p>Begivenheden er kun synlig for administratorer. Forældrene ser først vagterne, når du åbner for tilmelding.</p>
+    </div>
+</div>
+
+<div class="card form">
+    <form asp-action="Create" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div class="field">
+            <label asp-for="Name" class="required"></label>
+            <input asp-for="Name" placeholder="Fx Skolefest 2026" />
+            <span asp-validation-for="Name"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Location" class="required"></label>
+            <input asp-for="Location" placeholder="Fx Skolens festsal og udearealer" />
+            <span asp-validation-for="Location"></span>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label asp-for="StartDate" class="required"></label>
+                <input asp-for="StartDate" type="date" />
+                <span asp-validation-for="StartDate"></span>
+            </div>
+            <div class="field">
+                <label asp-for="EndDate" class="required"></label>
+                <input asp-for="EndDate" type="date" />
+                <span class="help">Samme dato, hvis begivenheden kun er én dag.</span>
+                <span asp-validation-for="EndDate"></span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label asp-for="Description"></label>
+            <textarea asp-for="Description" rows="4"></textarea>
+            <span asp-validation-for="Description"></span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><icon name="check" />Opret begivenhed</button>
+            <a class="btn btn-ghost" asp-action="Index">Annuller</a>
+        </div>
+    </form>
+</div>

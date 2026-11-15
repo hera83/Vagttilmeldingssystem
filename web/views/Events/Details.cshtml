@@ -1,0 +1,51 @@
+@model web.ViewModels.Events.DetailsEventsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+<a class="back-link" asp-action="Index" asp-route-archived="@(Model.IsArchived ? "true" : null)"><icon name="arrow-left" />Tilbage til begivenheder</a>
+<div class="page-header">
+    <div>
+        <h1>@Model.Name</h1>
+        <p class="meta">
+            <span><icon name="calendar" />@Model.PeriodText</span>
+            <span><icon name="map-pin" />@Model.Location</span>
+            @if (Model.IsArchived)
+            {
+                <span class="badge badge-neutral"><icon name="archive" />Arkiveret</span>
+            }
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@Model.Id"><icon name="edit" />Ret begivenhed</a>
+        @if (Model.IsArchived)
+        {
+            <form asp-action="Unarchive" asp-route-id="@Model.Id" method="post">
+                <button type="submit" class="btn btn-ghost"><icon name="refresh" />Gør aktiv igen</button>
+            </form>
+        }
+        else
+        {
+            <form asp-action="Archive" asp-route-id="@Model.Id" method="post" data-confirm="Vil du arkivere @Model.Name? Den skjules fra listen over aktive begivenheder.">
+                <button type="submit" class="btn btn-ghost"><icon name="archive" />Arkivér</button>
+            </form>
+        }
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" data-confirm="Vil du slette @Model.Name? Det kan ikke fortrydes.">
+            <button type="submit" class="btn btn-danger"><icon name="trash" />Slet</button>
+        </form>
+    </div>
+</div>
+
+<section class="card" aria-labelledby="details-title">
+    <div class="card-header">
+        <span class="card-icon"><icon name="info" /></span>
+        <div>
+            <h2 id="details-title">Detaljer</h2>
+        </div>
+    </div>
+    <dl class="details">
+        <dt>Periode</dt><dd>@Model.PeriodText</dd>
+        <dt>Sted</dt><dd>@Model.Location</dd>
+        <dt>Beskrivelse</dt>
+        <dd class="pre-line">@(string.IsNullOrWhiteSpace(Model.Description) ? "Ingen beskrivelse." : Model.Description)</dd>
+    </dl>
+</section>

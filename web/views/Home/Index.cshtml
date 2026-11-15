@@ -37,10 +37,13 @@
                 <span class="card-icon"><icon name="users" /></span>
                 <div>
                     <h2 id="admin-title">Administration</h2>
-                    <p>Opret forældre og administratorer, og styr deres adgang.</p>
+                    <p>Opret begivenheder og vagter, og administrér forældre og administratorer.</p>
                 </div>
             </div>
-            <a class="btn btn-primary" asp-controller="Users" asp-action="Index"><icon name="users" />Brugere</a>
+            <div class="form-actions mb-0">
+                <a class="btn btn-primary" asp-controller="Events" asp-action="Index"><icon name="calendar" />Begivenheder</a>
+                <a class="btn btn-secondary" asp-controller="Users" asp-action="Index"><icon name="users" />Brugere</a>
+            </div>
         </section>
     }
 </div>

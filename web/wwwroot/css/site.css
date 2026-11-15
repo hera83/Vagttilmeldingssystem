@@ -311,3 +311,36 @@ table.table { width: 100%; border-collapse: collapse; }
 .mt-2 { margin-top: 2rem; }
 .mb-0 { margin-bottom: 0; }
 .nowrap { white-space: nowrap; }
+
+/* ---------- Værktøjslinje, faner og søgning ---------- */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; margin-bottom: 1rem; }
+.tabs { display: flex; gap: .25rem; border-bottom: 2px solid var(--border); }
+.tabs a { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem .9rem; font-weight: 700; color: var(--text-muted); text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.tabs a:hover { color: var(--primary); }
+.tabs a[aria-current="page"] { color: var(--primary); border-bottom-color: var(--primary); }
+.tabs .count { display: inline-grid; place-items: center; min-width: 1.5rem; padding: 0 .35rem; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: .8rem; }
+.search { display: flex; gap: .5rem; flex: 1; max-width: 26rem; }
+.search input { flex: 1; }
+
+/* ---------- Lister med rækker (begivenheder m.m.) ---------- */
+.item-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.item-row {
+    display: flex; align-items: center; gap: .9rem; padding: .85rem 1rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+    color: var(--text); text-decoration: none;
+}
+.item-row:hover { border-color: #B9CCE6; background: #FAFCFF; color: var(--text); }
+.item-main { display: flex; flex-direction: column; gap: .15rem; flex: 1; min-width: 0; }
+.item-main strong { font-size: 1.05rem; }
+.item-chevron { color: var(--text-muted); }
+.meta { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; color: var(--text-muted); font-size: .95rem; }
+.meta > span { display: inline-flex; align-items: center; gap: .35rem; }
+.page-header .meta { margin-top: .25rem; }
+.pre-line { white-space: pre-line; }
+
+@media (max-width: 640px) {
+    .search { max-width: none; width: 100%; }
+    .tabs { width: 100%; }
+    .item-row { padding: .75rem; gap: .7rem; }
+    .item-row .card-icon { display: none; }
+}

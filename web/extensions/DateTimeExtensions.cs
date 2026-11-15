@@ -10,7 +10,15 @@ public static class DateTimeExtensions
 {
     private static readonly TimeZoneInfo DanishTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
 
-    public static readonly CultureInfo Danish = CultureInfo.GetCultureInfo("da-DK");
+    /// <summary>da-DK med ugedagsforkortelser som i mockups ("lør."). .NET/ICU giver ellers "lør" uden punktum.</summary>
+    public static readonly CultureInfo Danish = CreateDanishCulture();
+
+    private static CultureInfo CreateDanishCulture()
+    {
+        var culture = new CultureInfo("da-DK");
+        culture.DateTimeFormat.AbbreviatedDayNames = ["søn.", "man.", "tir.", "ons.", "tor.", "fre.", "lør."];
+        return CultureInfo.ReadOnly(culture);
+    }
 
     /// <summary>UTC → dansk tid.</summary>
     public static DateTime ToDanishTime(this DateTime utc) =>
@@ -45,4 +53,20 @@ public static class DateTimeExtensions
     /// <summary>Fx "17:00".</summary>
     public static string ToDanishTimeText(this DateTime utc) =>
         utc.ToDanishTime().ToString("HH':'mm", Danish);
+
+    /// <summary>Fx "fre. 14. mar. 2025".</summary>
+    public static string ToDanishDateText(this DateOnly date) =>
+        date.ToString("ddd d. MMM yyyy", Danish);
+
+    /// <summary>Én dato, eller fx "fre. 14. mar. – lør. 15. mar. 2025", hvis perioden er flere dage.</summary>
+    public static string ToDanishPeriodText(DateOnly start, DateOnly end)
+    {
+        if (start == end)
+        {
+            return start.ToDanishDateText();
+        }
+
+        var startText = start.Year == end.Year ? start.ToString("ddd d. MMM", Danish) : start.ToDanishDateText();
+        return $"{startText} – {end.ToDanishDateText()}";
+    }
 }

@@ -17,6 +17,8 @@ using web.Infrastructure.ErrorHandling;
 using web.Infrastructure.Logging;
 using web.Managers.Members;
 using web.Managers.Members.Interfaces;
+using web.Repositories.Events;
+using web.Repositories.Events.Interfaces;
 using web.Repositories.Logs;
 using web.Repositories.Logs.Interfaces;
 using web.Repositories.Profiles;
@@ -118,6 +120,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
 
 // Managers
 builder.Services.AddScoped<IMemberManager, MemberManager>();
