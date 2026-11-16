@@ -11,6 +11,7 @@
 | `SaveAsync(SavePushSubscriptionDto dto)` | Opretter abonnementet, eller opdaterer nøglerne og ejeren, hvis adressen (`Endpoint`) findes. Logger en anden bruger ind på samme enhed og slår push til, flyttes abonnementet til den bruger. |
 | `DeleteForUserAsync(Guid userId, string endpoint)` | Sletter brugerens **eget** abonnement. `false`, hvis det ikke findes eller tilhører en anden. |
 | `DeleteAsync(Guid id)` | Sletter et abonnement, som push-tjenesten har meldt udløbet (404/410). |
+| `DeleteAllForUserAsync(Guid userId)` | Sletter alle brugerens abonnementer (anonymisering). |
 | `GetByUserIdAsync(Guid userId)` | Brugerens abonnementer (én pr. enhed). |
 | `GetActiveSubscriberIdsAsync()` | Id'er på aktive brugere med mindst ét abonnement. |
 | `MarkSuccessAsync(Guid id, DateTime atUtc)` | Sætter `LastSuccessAt` efter en vellykket levering. |

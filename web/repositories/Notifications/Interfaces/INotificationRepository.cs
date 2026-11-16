@@ -24,4 +24,13 @@ public interface INotificationRepository
 
     /// <summary>Køens status til dashboardet: sendt og opgivet siden sinceUtc, ventende nu og den seneste opgivne besked.</summary>
     Task<NotificationStatsDto> GetStatsAsync(DateTime sinceUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Brugerens beskeder, nyeste først (dataudtræk).</summary>
+    Task<List<NotificationDto>> GetForUserAsync(Guid userId, int take, CancellationToken cancellationToken = default);
+
+    /// <summary>Sletter brugerens ventende beskeder (anonymisering). Returnerer antal.</summary>
+    Task<int> DeletePendingForUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Sletter færdigbehandlede beskeder (Sent, Skipped, Failed), der er ældre end cutoffUtc. Returnerer antal.</summary>
+    Task<int> DeleteFinishedBeforeAsync(DateTime cutoffUtc, CancellationToken cancellationToken = default);
 }

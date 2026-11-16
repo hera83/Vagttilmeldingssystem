@@ -11,6 +11,7 @@
 | `CreateAsync(CreatePasswordTokenDto dto)` | Laver et nyt token (32 tilfældige bytes, base64url) og gemmer kun SHA-256-hashet. Brugerens ubrugte tokens med samme formål slettes i samme transaktion, så kun det nyeste link virker. Returnerer det rå token én gang. |
 | `FindAsync(string token)` | Slår op på hashet. Returnerer også brugte og udløbne, så siden kan forklare hvorfor. |
 | `ConsumeAsync(Guid id, DateTime nowUtc)` | Markerer tokenet som brugt i én `UPDATE … WHERE UsedAt IS NULL AND ExpiresAt > now`. `true` kun for det første forsøg. |
+| `DeleteExpiredAsync(DateTime nowUtc)` | Oprydning: sletter udløbne links og links, der er brugt for mere end et døgn siden. |
 | `DeleteUnusedForUserAsync(Guid userId)` | Sletter brugerens ubrugte tokens (alle formål), når adgangskoden er sat. |
 
 ## Faldgruber

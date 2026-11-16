@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using web.Infrastructure.Authentication;
+using web.Managers.Members.Interfaces;
 using web.Repositories.Profiles.Interfaces;
 using web.ViewModels.Profile;
 
 namespace web.Controllers;
 
 /// <summary>"Min profil": kun den indloggede brugers egen profil. Der er bevidst intet id i URL'en.</summary>
-public class ProfileController(IProfileRepository profileRepository) : Controller
+public class ProfileController(IProfileRepository profileRepository, IMemberManager memberManager) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -51,5 +52,21 @@ public class ProfileController(IProfileRepository profileRepository) : Controlle
         await profileRepository.SetEmailNotificationsAsync(userId, model.EmailNotifications, cancellationToken);
         TempData["Success"] = model.EmailNotifications ? "E-mail-beskeder er slået til." : "E-mail-beskeder er slået fra.";
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>"Hent mine data" (GDPR art. 15): alt om den indloggede bruger som JSON-fil.</summary>
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public async Task<IActionResult> Export(CancellationToken cancellationToken)
+    {
+        if (UserPrincipalFactory.GetUserId(User) is not { } userId)
+        {
+            return Challenge();
+        }
+
+        var export = await memberManager.ExportMemberAsync(userId, cancellationToken);
+        return export is null
+            ? NotFound()
+            : File(export.ToExportProfileViewModel().ToJsonBytes(), "application/json", export.ToExportFileName(own: true));
     }
 }

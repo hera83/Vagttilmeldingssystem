@@ -27,6 +27,11 @@ public class HomeController(IEnrollmentManager enrollmentManager) : Controller
         return View(overview.ToIndexHomeViewModel(DateTime.UtcNow));
     }
 
+    // "Om dine data" er anonym, så den kan læses før login. Den viser ingen data.
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult Privacy() => View();
+
     // Installationsvejledningen er anonym, så den kan nås fra login-siden. Den viser ingen data.
     [HttpGet]
     [AllowAnonymous]

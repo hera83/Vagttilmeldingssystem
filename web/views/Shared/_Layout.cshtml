@@ -42,7 +42,8 @@
                     <a class="user-chip" asp-controller="Account" asp-action="ChangePassword" title="Skift adgangskode">
                         <icon name="user" /><span class="user-name">@User.FindFirst(UserClaimTypes.DisplayName)?.Value</span>
                     </a>
-                    <form asp-controller="Account" asp-action="Logout" method="post">
+                    <form asp-controller="Account" asp-action="Logout" method="post" data-logout>
+                        <input type="hidden" name="pushEndpoint" value="" data-push-endpoint />
                         <button type="submit" class="btn btn-ghost btn-sm"><icon name="log-out" /><span class="hide-sm">Log ud</span></button>
                     </form>
                 </div>

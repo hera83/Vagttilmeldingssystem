@@ -145,6 +145,20 @@
             </form>
         </section>
 
+        <section class="card" aria-labelledby="data-title">
+            <div class="card-header">
+                <span class="card-icon"><icon name="shield" /></span>
+                <div>
+                    <h2 id="data-title">Dine data</h2>
+                    <p>Se hvad der gemmes om dig, og hent en kopi.</p>
+                </div>
+            </div>
+            <div class="form-actions mt-0 mb-0">
+                <a class="btn btn-secondary btn-sm" asp-action="Export"><icon name="download" />Hent mine data</a>
+                <a class="btn btn-ghost btn-sm" asp-controller="Home" asp-action="Privacy"><icon name="info" />Om dine data</a>
+            </div>
+        </section>
+
         <section class="card" aria-labelledby="security-title">
             <div class="card-header">
                 <span class="card-icon"><icon name="lock" /></span>

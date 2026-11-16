@@ -158,11 +158,12 @@ public partial class MailService
             }
 
             using var stream = new MemoryStream();
-            if (part is MimePart mimePart)
+            // En del uden indhold (skæv mail) giver en tom fil i stedet for en fejl.
+            if (part is MimePart { Content: not null } mimePart)
             {
                 await mimePart.Content.DecodeToAsync(stream, cancellationToken);
             }
-            else if (part is MessagePart messagePart)
+            else if (part is MessagePart { Message: not null } messagePart)
             {
                 await messagePart.Message.WriteToAsync(stream, cancellationToken);
             }
@@ -307,7 +308,7 @@ public partial class MailService
 
     private static long SizeOf(MimeEntity part)
     {
-        if (part is not MimePart mimePart)
+        if (part is not MimePart { Content: not null } mimePart)
         {
             return 0;
         }

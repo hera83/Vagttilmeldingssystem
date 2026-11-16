@@ -15,4 +15,7 @@ public interface IPasswordTokenRepository
 
     /// <summary>Sletter alle brugerens ubrugte links (fx når adgangskoden er sat).</summary>
     Task<int> DeleteUnusedForUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Sletter udløbne links og links, der er brugt for mere end et døgn siden (oprydning). Returnerer antal.</summary>
+    Task<int> DeleteExpiredAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
 }

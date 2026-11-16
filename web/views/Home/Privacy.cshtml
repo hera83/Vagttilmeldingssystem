@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Om dine data";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+<a class="back-link" asp-controller="@(isAuthenticated ? "Profile" : "Account")" asp-action="@(isAuthenticated ? "Index" : "Login")"><icon name="arrow-left" />@(isAuthenticated ? "Til Min profil" : "Til log ind")</a>
+<div class="page-header">
+    <div>
+        <h1>Om dine data</h1>
+        <p>Hvad Vagttilmelding gemmer om dig, hvorfor, hvem der kan se det, og hvordan du får det udleveret eller slettet.</p>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <section class="card" aria-labelledby="what-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="list" /></span>
+            <div><h2 id="what-title">Det gemmer vi</h2></div>
+        </div>
+        <ul class="plain-list">
+            <li><strong>Konto:</strong> din e-mail (brugernavn), dit navn, om du er administrator, hvornår du sidst loggede ind. Adgangskoden gemmes kun som et hash, som ingen kan læse.</li>
+            <li><strong>Profil:</strong> fulde navn, adresse, telefon, trøjestørrelse, væske- og tivolibilletter, barnets navn og klasse.</li>
+            <li><strong>Vagter:</strong> hvilke vagter du er på, om du selv tilmeldte dig eller blev sat på, og hvornår. Også vagter, du er fjernet fra.</li>
+            <li><strong>Beskeder:</strong> hvilke push-beskeder og mails systemet har sendt dig (slettes automatisk efter 90 dage), og en adresse pr. enhed, hvor du har slået push til.</li>
+            <li><strong>Mails til systemet:</strong> svarer du på en mail fra systemet, ligger svaret i systemets postkasse.</li>
+            <li><strong>Teknisk log:</strong> fejl og hændelser uden indholdet af din profil.</li>
+        </ul>
+    </section>
+
+    <section class="card" aria-labelledby="why-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="info" /></span>
+            <div><h2 id="why-title">Derfor og hvem der ser det</h2></div>
+        </div>
+        <ul class="plain-list">
+            <li>Oplysningerne bruges til at fordele vagter og til den praktiske planlægning af arrangementerne (kontakt, t-shirts, billetter).</li>
+            <li>Kun du og skolens administratorer kan se din profil og dine vagter. Andre forældre ser hverken dit navn eller dine oplysninger.</li>
+            <li>Administratorerne kan hente en deltagerliste for et arrangement med oplysningerne fra profilen.</li>
+            <li>Push-beskeder og mails om nye vagter indeholder aldrig oplysninger om dig. Påmindelser indeholder kun din egen vagt.</li>
+        </ul>
+    </section>
+
+    <section class="card" aria-labelledby="rights-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="shield" /></span>
+            <div><h2 id="rights-title">Dine muligheder</h2></div>
+        </div>
+        <ul class="plain-list">
+            <li><strong>Se og ret:</strong> under <a asp-controller="Profile" asp-action="Index">Min profil</a>.</li>
+            <li><strong>Få en kopi:</strong> klik på <strong>Hent mine data</strong> under Min profil. Du får alle oplysningerne som en fil.</li>
+            <li><strong>Slå beskeder fra:</strong> push og e-mail kan slås fra under Min profil.</li>
+            <li><strong>Blive slettet:</strong> kontakt administratoren. Har du været på vagter, bliver du anonymiseret: din profil slettes, og dine vagter står som »Slettet bruger«, så planen stadig hænger sammen.</li>
+        </ul>
+    </section>
+
+    <section class="card" aria-labelledby="time-title">
+        <div class="card-header">
+            <span class="card-icon"><icon name="clock" /></span>
+            <div><h2 id="time-title">Hvor længe</h2></div>
+        </div>
+        <p>Beskeder slettes automatisk efter 90 dage, og links til at vælge adgangskode slettes, når de er udløbet. Hvor længe profiler og vagthistorik gemmes efter et skoleår, beslutter skolen eller forældrerådet. Spørg administratoren.</p>
+    </section>
+</div>

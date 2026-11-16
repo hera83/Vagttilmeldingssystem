@@ -242,4 +242,22 @@ public class AssignmentRepository(WebDbContext dbContext) : IAssignmentRepositor
              UserName = u.UserName,
              Source = a.Source
          }).ToListAsync(cancellationToken);
+
+    public Task<List<AssignmentHistoryDto>> GetHistoryForUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        (from a in dbContext.Assignments.AsNoTracking()
+         join s in dbContext.Shifts on a.ShiftId equals s.Id
+         join e in dbContext.Events on s.EventId equals e.Id
+         where a.UserId == userId
+         orderby s.StartUtc descending
+         select new AssignmentHistoryDto
+         {
+             EventName = e.Name,
+             ShiftTitle = s.Title,
+             StartUtc = s.StartUtc,
+             EndUtc = s.EndUtc,
+             Source = a.Source,
+             IsActive = a.IsActive,
+             AssignedAt = a.CreatedAt,
+             CancelledAt = a.CancelledAt
+         }).ToListAsync(cancellationToken);
 }

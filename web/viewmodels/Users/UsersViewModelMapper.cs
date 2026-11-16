@@ -23,9 +23,10 @@ public static class UsersViewModelMapper
         }).ToList()
     };
 
-    public static ProfileUsersViewModel ToProfileUsersViewModel(this MemberDetailsDto member) => new()
+    public static ProfileUsersViewModel ToProfileUsersViewModel(this MemberDetailsDto member, Guid? currentUserId) => new()
     {
         Id = member.User.Id,
+        IsCurrentUser = member.User.Id == currentUserId,
         UserName = member.User.UserName,
         DisplayName = member.User.DisplayName,
         HasProfile = member.Profile is not null,

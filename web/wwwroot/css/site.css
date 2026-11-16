@@ -549,3 +549,7 @@ textarea.mail-body { width: 100%; font-family: var(--font); line-height: 1.5; }
 
 /* Ikon-sprite (symbolerne bruges med <use>). I CSS i stedet for style-attribut (CSP, step 15). */
 .icon-sprite { display: none; }
+
+/* Sikkerhed og persondata (step 15) */
+.plain-list { margin: 0; padding-left: 1.2rem; display: grid; gap: .55rem; }
+.mt-0 { margin-top: 0; }

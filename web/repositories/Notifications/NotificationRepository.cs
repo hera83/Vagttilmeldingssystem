@@ -108,4 +108,20 @@ public class NotificationRepository(WebDbContext dbContext) : INotificationRepos
                 .FirstOrDefaultAsync(cancellationToken)
         };
     }
+
+    public Task<List<NotificationDto>> GetForUserAsync(Guid userId, int take, CancellationToken cancellationToken = default) =>
+        dbContext.Notifications.AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(take)
+            .Select(NotificationMapper.ToDtoExpression)
+            .ToListAsync(cancellationToken);
+
+    public Task<int> DeletePendingForUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        dbContext.Notifications.Where(x => x.UserId == userId && x.Status == NotificationStatus.Pending).ExecuteDeleteAsync(cancellationToken);
+
+    public Task<int> DeleteFinishedBeforeAsync(DateTime cutoffUtc, CancellationToken cancellationToken = default) =>
+        dbContext.Notifications
+            .Where(x => x.Status != NotificationStatus.Pending && x.UpdatedAt < cutoffUtc)
+            .ExecuteDeleteAsync(cancellationToken);
 }

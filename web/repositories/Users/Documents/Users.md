@@ -18,6 +18,7 @@
 | `ChangeUserNameAsync(Guid id, string newUserName)` | Admin ændrer brugerens e-mail (brugernavn). Returnerer `Success`, `Unchanged`, `NotFound` eller `Taken`. Skifter `SecurityStamp`, så brugeren logges ud og skal bruge den nye e-mail. |
 | `SetPasswordAsync(Guid id, string newPassword)` | Admin sætter ny adgangskode. Skifter `SecurityStamp`. `false`, hvis brugeren ikke findes. |
 | `ChangePasswordAsync(Guid id, string currentPassword, string newPassword)` | Brugerens egen ændring. `null`, hvis den nuværende adgangskode er forkert. Skifter `SecurityStamp`. |
+| `AnonymizeAsync(Guid id)` | GDPR: brugernavn bliver `slettet-<id>@anonym.invalid`, navnet "Slettet bruger <de sidste 8 tegn af id'et>" (de første tegn i et UUIDv7 er et tidsstempel), adgangskoden ukendt, `IsActive`/`IsAdmin` false, ny `SecurityStamp`. Rækken (og dermed vagthistorikken) bevares. |
 | `DeleteAsync(Guid id)` | `true`, hvis rækken fandtes. |
 
 ## Faldgruber

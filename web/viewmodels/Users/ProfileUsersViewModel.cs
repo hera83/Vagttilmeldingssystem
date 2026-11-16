@@ -7,6 +7,9 @@ public class ProfileUsersViewModel
     public string UserName { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public bool HasProfile { get; set; }
+
+    /// <summary>Den indloggede administrator selv (kan ikke anonymiseres).</summary>
+    public bool IsCurrentUser { get; set; }
     public bool IsComplete { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;

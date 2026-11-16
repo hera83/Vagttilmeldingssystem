@@ -2,16 +2,19 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using web.Data.Models;
 using web.Infrastructure.Authentication;
+using web.Infrastructure.Security;
 using web.Managers.AccountRecovery.Dtos;
 using web.Managers.AccountRecovery.Interfaces;
+using web.Managers.Notifications.Interfaces;
 using web.Repositories.Users.Interfaces;
 using web.ViewModels.Account;
 
 namespace web.Controllers;
 
-public class AccountController(IUserRepository userRepository, IAccountRecoveryManager accountRecoveryManager) : Controller
+public class AccountController(IUserRepository userRepository, IAccountRecoveryManager accountRecoveryManager, INotificationManager notificationManager) : Controller
 {
     [HttpGet]
     [AllowAnonymous]
@@ -27,6 +30,7 @@ public class AccountController(IUserRepository userRepository, IAccountRecoveryM
 
     [HttpPost]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Login)]
     public async Task<IActionResult> Login(LoginAccountViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -50,8 +54,14 @@ public class AccountController(IUserRepository userRepository, IAccountRecoveryM
     }
 
     [HttpPost]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout(string? pushEndpoint, CancellationToken cancellationToken)
     {
+        // pwa.js sender enhedens push-adresse med, så en delt enhed ikke får beskeder til den forrige bruger.
+        if (!string.IsNullOrWhiteSpace(pushEndpoint) && UserPrincipalFactory.GetUserId(User) is { } userId)
+        {
+            await notificationManager.UnsubscribeAsync(userId, pushEndpoint.Trim(), cancellationToken);
+        }
+
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
     }
@@ -93,6 +103,7 @@ public class AccountController(IUserRepository userRepository, IAccountRecoveryM
 
     [HttpPost]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.PasswordLinks)]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordAccountViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -119,6 +130,7 @@ public class AccountController(IUserRepository userRepository, IAccountRecoveryM
 
     [HttpPost]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.PasswordLinks)]
     public async Task<IActionResult> SetPassword(SetPasswordAccountViewModel model, CancellationToken cancellationToken) =>
         await SetPasswordWithLinkAsync(model, PasswordTokenPurpose.Invitation, "Din adgangskode er gemt. Log ind med din e-mail og den nye adgangskode.", cancellationToken);
 
@@ -134,6 +146,7 @@ public class AccountController(IUserRepository userRepository, IAccountRecoveryM
 
     [HttpPost]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.PasswordLinks)]
     public async Task<IActionResult> ResetPassword(ResetPasswordAccountViewModel model, CancellationToken cancellationToken) =>
         await SetPasswordWithLinkAsync(model, PasswordTokenPurpose.Reset, "Din nye adgangskode er gemt, og du er logget ud alle andre steder. Log ind med den nye adgangskode.", cancellationToken);
 

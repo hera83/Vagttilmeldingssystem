@@ -42,4 +42,12 @@ public class PasswordTokenRepository(WebDbContext dbContext) : IPasswordTokenRep
 
     public Task<int> DeleteUnusedForUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
         dbContext.PasswordTokens.Where(x => x.UserId == userId && x.UsedAt == null).ExecuteDeleteAsync(cancellationToken);
+
+    public Task<int> DeleteExpiredAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+    {
+        var usedBefore = nowUtc.AddDays(-1);
+        return dbContext.PasswordTokens
+            .Where(x => x.ExpiresAt < nowUtc || (x.UsedAt != null && x.UsedAt < usedBefore))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

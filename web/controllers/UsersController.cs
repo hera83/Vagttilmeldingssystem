@@ -9,6 +9,7 @@ using web.Managers.Members.Dtos;
 using web.Managers.Members.Interfaces;
 using web.Repositories.Users.Dtos;
 using web.Repositories.Users.Interfaces;
+using web.ViewModels.Profile;
 using web.ViewModels.Users;
 
 namespace web.Controllers;
@@ -32,7 +33,7 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
             return NotFound();
         }
 
-        return View(member.ToProfileUsersViewModel());
+        return View(member.ToProfileUsersViewModel(UserPrincipalFactory.GetUserId(User)));
     }
 
     [HttpGet]
@@ -197,7 +198,7 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
 
         TempData[result == DeleteMemberResult.Deleted ? "Success" : "Error"] = result == DeleteMemberResult.Deleted
             ? "Brugeren er slettet."
-            : "Brugeren har vagter og kan ikke slettes, så historikken bevares. Deaktivér brugeren i stedet under Ret.";
+            : "Brugeren har vagter og kan ikke slettes, så historikken bevares. Deaktivér brugeren under Ret, eller anonymisér brugeren på brugerens profil.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -220,5 +221,34 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Anonymisér (GDPR): i stedet for sletning, når brugeren har vagthistorik. Kan ikke bruges på sig selv.</summary>
+    [HttpPost]
+    public async Task<IActionResult> Anonymize(Guid id, CancellationToken cancellationToken)
+    {
+        if (UserPrincipalFactory.GetUserId(User) == id)
+        {
+            return BadRequest();
+        }
+
+        if (await memberManager.AnonymizeMemberAsync(id, cancellationToken) == AnonymizeMemberResult.NotFound)
+        {
+            return NotFound();
+        }
+
+        TempData["Success"] = "Brugeren er anonymiseret. Profil, push og ventende beskeder er slettet, og vagthistorikken står nu som »Slettet bruger«.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Dataudtræk for en bruger (GDPR art. 15), fx når en forælder beder om indsigt.</summary>
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public async Task<IActionResult> Export(Guid id, CancellationToken cancellationToken)
+    {
+        var export = await memberManager.ExportMemberAsync(id, cancellationToken);
+        return export is null
+            ? NotFound()
+            : File(export.ToExportProfileViewModel().ToJsonBytes(), "application/json", export.ToExportFileName(own: false));
     }
 }

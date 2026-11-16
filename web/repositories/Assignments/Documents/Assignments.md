@@ -19,6 +19,7 @@
 | `GetActiveUpcomingByIdAsync(Guid assignmentId)` | Én aktiv tildeling med vagtens tidspunkt, eller `null` (afmeldt, slettet eller bruger deaktiveret). Bruges til at springe forældede påmindelser over ved afsendelse. |
 | `GetRecentActivityAsync(int take)` | De seneste tilmeldinger (`Enrolled`), admin-tildelinger (`Assigned`) og fjernelser (`Removed`) med brugerens navn, vagt og begivenhed, nyeste først. **Kun til admin.** |
 | `GetActiveForEventAsync(Guid eventId)` | Aktive tildelinger i en begivenhed med navn og e-mail, sorteret efter vagtens start (deltagerlisten). **Kun til admin.** |
+| `GetHistoryForUserAsync(Guid userId)` | Alle brugerens tildelinger, også afmeldte, med vagt og begivenhed (dataudtræk). |
 | `AnyForUserAsync(Guid userId)` | Har brugeren tildelinger (også afmeldte)? Så kan brugeren ikke slettes. |
 
 ## Transaktionsgrænse (vigtigt)

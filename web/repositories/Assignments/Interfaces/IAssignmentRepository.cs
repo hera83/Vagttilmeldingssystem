@@ -37,4 +37,7 @@ public interface IAssignmentRepository
 
     /// <summary>Aktive tildelinger i en begivenhed med brugerens navn og e-mail (deltagerlisten). Kun til admin.</summary>
     Task<List<EventParticipantDto>> GetActiveForEventAsync(Guid eventId, CancellationToken cancellationToken = default);
+
+    /// <summary>Alle brugerens tildelinger, også afmeldte, nyeste vagt først (dataudtræk).</summary>
+    Task<List<AssignmentHistoryDto>> GetHistoryForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 }

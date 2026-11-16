@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using web.Infrastructure.Security;
 using web.Infrastructure.Authentication;
 using web.Managers.Enrollment.Dtos;
 using web.Managers.Enrollment.Interfaces;
@@ -22,6 +24,7 @@ public class SignupController(IEnrollmentManager enrollmentManager) : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Enroll)]
     public async Task<IActionResult> Enroll(IndexSignupViewModel model, CancellationToken cancellationToken)
     {
         if (UserPrincipalFactory.GetUserId(User) is not { } userId)

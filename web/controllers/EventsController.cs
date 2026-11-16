@@ -89,7 +89,8 @@ public class EventsController(IEventRepository eventRepository, IPlanningManager
                 return NotFound();
             }
 
-            ModelState.AddModelError(nameof(model.ShiftIds), "Vælg mindst én vagt, der skal åbnes.");
+            // Fejlen står i opsummeringen: "All" ville indsætte et skjult <li style> og bryde CSP (step 15).
+            ModelState.AddModelError(string.Empty, "Vælg mindst én vagt, der skal åbnes.");
             return View(overview.ToOpenEventsViewModel(model.ShiftIds));
         }
 

@@ -31,7 +31,7 @@ public partial class MailService(IConfiguration configuration, IHostEnvironment 
         if (!string.IsNullOrWhiteSpace(pickup))
         {
             await WriteToPickupAsync(message, pickup, cancellationToken);
-            return new SendMailResponseDto { MessageId = message.MessageId, Delivery = MailDelivery.Pickup };
+            return new SendMailResponseDto { MessageId = message.MessageId ?? string.Empty, Delivery = MailDelivery.Pickup };
         }
 
         var host = configuration["Mail:Smtp:Host"];
@@ -57,14 +57,14 @@ public partial class MailService(IConfiguration configuration, IHostEnvironment 
             await client.ConnectAsync(host, port, security, cancellationToken);
             if (!string.IsNullOrWhiteSpace(userName))
             {
-                await client.AuthenticateAsync(userName, password, cancellationToken);
+                await client.AuthenticateAsync(userName, password ?? string.Empty, cancellationToken);
             }
 
             await client.SendAsync(message, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
         }, cancellationToken);
 
-        var response = new SendMailResponseDto { MessageId = message.MessageId, Delivery = MailDelivery.Smtp };
+        var response = new SendMailResponseDto { MessageId = message.MessageId ?? string.Empty, Delivery = MailDelivery.Smtp };
         if (request.SaveCopyToSent && configuration.GetValue("Mail:Imap:SaveSentCopy", true) && await IsMailboxConfiguredAsync(cancellationToken))
         {
             try

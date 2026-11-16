@@ -19,6 +19,8 @@ using web.Infrastructure.Logging;
 using web.Infrastructure.Mail;
 using web.Infrastructure.Notifications;
 using web.Infrastructure.Realtime;
+using web.Infrastructure.Security;
+using Microsoft.AspNetCore.RateLimiting;
 using web.Managers.AccountRecovery;
 using web.Managers.AccountRecovery.Interfaces;
 using web.Managers.Assignments;
@@ -26,6 +28,8 @@ using web.Managers.Dashboard;
 using web.Managers.Dashboard.Interfaces;
 using web.Managers.Mailbox;
 using web.Managers.Mailbox.Interfaces;
+using web.Managers.Maintenance;
+using web.Managers.Maintenance.Interfaces;
 using web.Managers.Assignments.Interfaces;
 using web.Managers.Enrollment;
 using web.Managers.Enrollment.Interfaces;
@@ -167,6 +171,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddScoped<UserCookieEvents>();
 
+// Rate limiting (step 15): login, links til adgangskode og tilmelding. Grænser i RateLimiting:* (se RateLimitPolicies).
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(RateLimitPolicies.Login, context => RateLimitPolicies.For(context, builder.Configuration, RateLimitPolicies.Login, 10, 300));
+    options.AddPolicy(RateLimitPolicies.PasswordLinks, context => RateLimitPolicies.For(context, builder.Configuration, RateLimitPolicies.PasswordLinks, 5, 900));
+    options.AddPolicy(RateLimitPolicies.Enroll, context => RateLimitPolicies.For(context, builder.Configuration, RateLimitPolicies.Enroll, 20, 60));
+});
+
 builder.Services.AddAuthorization(options =>
 {
     // Alt kræver login, medmindre det har [AllowAnonymous].
@@ -199,6 +212,7 @@ builder.Services.AddScoped<IAccountRecoveryManager, AccountRecoveryManager>();
 builder.Services.AddScoped<IReminderManager, ReminderManager>();
 builder.Services.AddScoped<IDashboardManager, DashboardManager>();
 builder.Services.AddScoped<IMailboxManager, MailboxManager>();
+builder.Services.AddScoped<IMaintenanceManager, MaintenanceManager>();
 
 // Eksterne services
 // Push (light pattern med biblioteket Lib.Net.Http.WebPush). Adressen er abonnementets, så klienten har ingen BaseAddress.
@@ -212,6 +226,7 @@ builder.Services.AddHostedService<LogCleanupWorker>();
 builder.Services.AddHostedService<NotificationWorker>();
 builder.Services.AddHostedService<ReminderWorker>();
 builder.Services.AddHostedService<MailboxPollWorker>();
+builder.Services.AddHostedService<DataCleanupWorker>();
 
 var app = builder.Build();
 
@@ -248,10 +263,18 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
 // Tomme 4xx/5xx-svar viser statussiden
 app.UseStatusCodePagesWithReExecute("/Home/Status/{0}");
 
+// Sikkerheds-headers (CSP m.fl.) på alle svar, også fejl- og statussider. HSTS kun i drift (step 15).
+app.UseMiddleware<SecurityHeadersMiddleware>();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Statiske filer fra wwwroot/ (anonymt, så login-siden har sit css) og standard-routen
 app.MapStaticAssets().AllowAnonymous();

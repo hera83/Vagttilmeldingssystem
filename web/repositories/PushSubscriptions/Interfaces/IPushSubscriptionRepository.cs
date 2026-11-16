@@ -19,4 +19,7 @@ public interface IPushSubscriptionRepository
     Task<List<Guid>> GetActiveSubscriberIdsAsync(CancellationToken cancellationToken = default);
 
     Task<bool> MarkSuccessAsync(Guid id, DateTime atUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Sletter alle brugerens abonnementer (anonymisering). Returnerer antal.</summary>
+    Task<int> DeleteAllForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 }

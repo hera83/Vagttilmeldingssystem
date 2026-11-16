@@ -47,6 +47,30 @@
         }
     }, true);
 
+    // Log ud: afmeld push på denne enhed og send adressen med, så serveren også sletter abonnementet (delte enheder).
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-logout') || form.hasAttribute('data-logout-ready') ||
+            !('serviceWorker' in navigator)) {
+            return;
+        }
+        event.preventDefault();
+        var done = false;
+        var finish = function () { if (done) { return; } done = true; form.setAttribute('data-logout-ready', ''); form.submit(); };
+        // getRegistration svarer med det samme (også uden service worker eller ved Shift+genindlæs, hvor siden ikke styres af den).
+        navigator.serviceWorker.getRegistration()
+            .then(function (registration) { return registration && registration.pushManager ? registration.pushManager.getSubscription() : null; })
+            .then(function (subscription) {
+                if (!subscription) { return null; }
+                var field = form.querySelector('[data-push-endpoint]');
+                if (field) { field.value = subscription.endpoint; }
+                return subscription.unsubscribe();
+            })
+            .catch(function () { /* Log ud alligevel. */ })
+            .then(finish);
+        setTimeout(finish, 3000);
+    });
+
     // 3. Installation.
     var deferredPrompt = null;
     var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;

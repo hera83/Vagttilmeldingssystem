@@ -52,4 +52,7 @@ public class PushSubscriptionRepository(WebDbContext dbContext) : IPushSubscript
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.LastSuccessAt, atUtc)
                 .SetProperty(x => x.UpdatedAt, atUtc), cancellationToken) > 0;
+
+    public Task<int> DeleteAllForUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        dbContext.PushSubscriptions.Where(x => x.UserId == userId).ExecuteDeleteAsync(cancellationToken);
 }

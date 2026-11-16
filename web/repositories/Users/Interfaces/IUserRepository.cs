@@ -27,4 +27,10 @@ public interface IUserRepository
     Task<UserDto?> ChangePasswordAsync(Guid id, string currentPassword, string newPassword, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Anonymiserer brugeren (GDPR): brugernavn og navn erstattes, adgangskoden bliver ukendt, brugeren deaktiveres og mister
+    /// admin-rettigheden. Rækken bevares, så vagthistorikken peger på "Slettet bruger". false, hvis brugeren ikke findes.
+    /// </summary>
+    Task<bool> AnonymizeAsync(Guid id, CancellationToken cancellationToken = default);
 }

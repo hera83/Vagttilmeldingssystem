@@ -23,4 +23,7 @@ public interface IProfileRepository
 
     /// <summary>Profilerne for brugerne (brugere uden profil er ikke med). Kun til admin (deltagerlisten).</summary>
     Task<Dictionary<Guid, ProfileDto>> GetByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+
+    /// <summary>Sletter brugerens profil (anonymisering). false, hvis der ingen var.</summary>
+    Task<bool> DeleteAsync(Guid userId, CancellationToken cancellationToken = default);
 }

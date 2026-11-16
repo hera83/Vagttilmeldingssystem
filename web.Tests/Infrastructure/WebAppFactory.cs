@@ -43,6 +43,8 @@ public class WebAppFactory : WebApplicationFactory<Program>
         // NotificationWorker kører ikke i testene, så de selv kan styre køen via INotificationManager (se NotificationWorkerTests).
         builder.UseSetting("Notifications:WorkerEnabled", "false");
         builder.UseSetting("Reminders:Enabled", "false");
+        // Rate limiting er slået fra, fordi testene logger ind mange gange fra samme adresse (se SecurityTests).
+        builder.UseSetting("RateLimiting:Enabled", "false");
         builder.UseSetting("App:BaseUrl", BaseUrl);
         builder.ConfigureTestServices(services =>
         {

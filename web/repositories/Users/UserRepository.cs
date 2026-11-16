@@ -147,4 +147,25 @@ public class UserRepository(WebDbContext dbContext) : IUserRepository
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
         await dbContext.Users.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken) > 0;
+
+    public async Task<bool> AnonymizeAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null)
+        {
+            return false;
+        }
+
+        // De sidste 8 tegn: id'er er UUIDv7, hvor de første tegn er et tidsstempel og ens for brugere oprettet samtidig.
+        var shortId = id.ToString("N")[^8..];
+        entity.UserName = $"slettet-{id:N}@anonym.invalid";
+        entity.DisplayName = $"Slettet bruger {shortId}";
+        entity.PasswordHash = Hasher.HashPassword(entity, Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"));
+        entity.SecurityStamp = Guid.NewGuid();
+        entity.IsActive = false;
+        entity.IsAdmin = false;
+        entity.LastLoginAt = null;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }

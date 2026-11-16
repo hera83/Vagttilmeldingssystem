@@ -76,4 +76,7 @@ public class ProfileRepository(WebDbContext dbContext) : IProfileRepository
             .Select(ProfileMapper.ToDtoExpression)
             .ToDictionaryAsync(x => x.UserId, cancellationToken);
     }
+
+    public async Task<bool> DeleteAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        await dbContext.Profiles.Where(x => x.UserId == userId).ExecuteDeleteAsync(cancellationToken) > 0;
 }
