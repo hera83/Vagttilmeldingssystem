@@ -20,4 +20,9 @@
     <PackageReference Include="Serilog.Sinks.SQLite" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Lokale secrets kommer aldrig med i en publish (heller ikke uden for Docker, hvor .dockerignore også stopper filen). -->
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

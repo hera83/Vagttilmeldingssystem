@@ -1,8 +1,11 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.WebEncoders;
 using System.Text.Encodings.Web;
@@ -153,6 +156,15 @@ appDb.DataSource = Path.Combine(builder.Environment.ContentRootPath, appDb.DataS
 Directory.CreateDirectory(Path.GetDirectoryName(appDb.DataSource)!);
 builder.Services.AddDbContext<WebDbContext>(options => options.UseSqlite(appDb.ToString()));
 
+// Nøglerne, der krypterer login-cookien, anti-forgery og TempData (step 16). De gemmes i app_dbs/keys, så de overlever en
+// genstart eller en ny container (volume). Ellers bliver alle logget ud ved hver opdatering, og "Husk mig" holder ikke.
+builder.Services.AddDataProtection()
+    .SetApplicationName("Vagttilmelding")
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "app_dbs", "keys")));
+
+// Bag en reverse proxy (step 16): X-Forwarded-For/-Proto kun fra kendte proxies (ForwardedHeaders:KnownProxies/KnownNetworks).
+builder.Services.Configure<ForwardedHeadersOptions>(options => ForwardedHeadersConfiguration.Apply(options, builder.Configuration));
+
 // Authentication (authentication.md): cookie-login
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
@@ -170,6 +182,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddScoped<UserCookieEvents>();
+
+// Anti-forgery- og TempData-cookien følger login-cookien: altid Secure i drift (step 16). Standarden er uden Secure.
+var cookieSecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+builder.Services.AddAntiforgery(options => options.Cookie.SecurePolicy = cookieSecurePolicy);
+builder.Services.Configure<CookieTempDataProviderOptions>(options => options.Cookie.SecurePolicy = cookieSecurePolicy);
 
 // Rate limiting (step 15): login, links til adgangskode og tilmelding. Grænser i RateLimiting:* (se RateLimitPolicies).
 builder.Services.AddRateLimiter(options =>
@@ -259,6 +276,9 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
     ExceptionHandlingPath = "/Home/Error",
     SuppressDiagnosticsCallback = _ => true
 });
+
+// Bag en reverse proxy: klientens IP og https fra X-Forwarded-* (kun kendte proxies). Før alt, der bruger scheme eller IP.
+app.UseForwardedHeaders();
 
 // Tomme 4xx/5xx-svar viser statussiden
 app.UseStatusCodePagesWithReExecute("/Home/Status/{0}");
