@@ -177,6 +177,16 @@ public class DashboardTests : IClassFixture<WebAppFactory>
     public void CsvHelper_Escape(string? value, string expected) => Assert.Equal(expected, CsvHelper.Escape(value));
 
     [Theory]
+    [InlineData(3600, "hver time")]
+    [InlineData(7200, "hver 2. time")]
+    [InlineData(60, "hvert minut")]
+    [InlineData(900, "hvert 15. minut")]
+    [InlineData(20, "hvert 20. sekund")]
+    [InlineData(90, "hvert 90. sekund")]
+    public void Paamindelsesinterval_Tekst(int seconds, string expected) =>
+        Assert.Equal(expected, web.ViewModels.Dashboard.DashboardViewModelMapper.IntervalText(TimeSpan.FromSeconds(seconds)));
+
+    [Theory]
     [InlineData("Skolefest 2027", "skolefest-2027")]
     [InlineData("Ærø Ølbod & Åby!", "aeroe-oelbod-aaby")]
     [InlineData("  ", "fil")]

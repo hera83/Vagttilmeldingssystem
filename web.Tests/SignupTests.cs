@@ -54,6 +54,21 @@ public class SignupTests : IClassFixture<WebAppFactory>
     }
 
     [Fact]
+    public async Task Begivenhedskort_ViserPeriodenForDeAabneVagter()
+    {
+        // Fundet i step 17: kortet viste kun datoen for den første vagt, selvom begivenheden varede flere dage.
+        var ev = await _factory.CreateEventAsync(new DateOnly(2027, 4, 16));
+        var first = await _factory.CreateShiftAsync(ev.Id, 2, new DateTime(2027, 4, 16, 8, 0, 0, DateTimeKind.Utc), "Periode første");
+        var last = await _factory.CreateShiftAsync(ev.Id, 2, new DateTime(2027, 4, 18, 8, 0, 0, DateTimeKind.Utc), "Periode sidste");
+        await _factory.OpenShiftsAsync(first.Id, last.Id);
+        var (client, _) = await ParentAsync();
+
+        var html = await client.GetHtmlAsync($"/Signup?eventId={ev.Id}");
+
+        Assert.Contains("fre. 16. apr. – søn. 18. apr. 2027", html);
+    }
+
+    [Fact]
     public async Task KunAabneVagter_Vises_AldrigKladderEllerArkiverede()
     {
         var ev = await _factory.CreateEventAsync();

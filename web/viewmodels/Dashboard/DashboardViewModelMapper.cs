@@ -91,10 +91,18 @@ public static class DashboardViewModelMapper
 
     private static int Percent(int part, int total) => total <= 0 ? 0 : (int)Math.Round(100.0 * part / total);
 
-    private static string IntervalText(TimeSpan interval) =>
-        interval.TotalMinutes >= 60 && interval.TotalMinutes % 60 == 0
-            ? interval.TotalHours == 1 ? "hver time" : $"hver {interval.TotalHours:0}. time"
-            : $"hvert {interval.TotalMinutes:0}. minut";
+    /// <summary>"hver time", "hver 2. time", "hvert minut", "hvert 15. minut" eller "hvert 20. sekund" (fundet i step 17: under et minut stod der "hvert 0. minut").</summary>
+    public static string IntervalText(TimeSpan interval)
+    {
+        var seconds = (long)Math.Round(interval.TotalSeconds);
+        return seconds switch
+        {
+            >= 3600 when seconds % 3600 == 0 => seconds == 3600 ? "hver time" : $"hver {seconds / 3600}. time",
+            >= 60 when seconds % 60 == 0 => seconds == 60 ? "hvert minut" : $"hvert {seconds / 60}. minut",
+            <= 1 => "hvert sekund",
+            _ => $"hvert {seconds}. sekund"
+        };
+    }
 
     private static string ChannelText(string channel) => channel == "Email" ? "e-mail" : "push";
 }

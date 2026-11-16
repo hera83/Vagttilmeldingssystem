@@ -15,7 +15,10 @@ public static class SignupViewModelMapper
                 EventId = g.Key,
                 Name = g.First().Shift.EventName,
                 Location = g.First().Shift.EventLocation,
-                DateText = g.Min(x => x.Shift.StartUtc).ToDanishDateText(),
+                // Fra første til sidste åbne vagt (dansk dato), så en begivenhed over flere dage ikke ser ud til kun at være én dag.
+                DateText = DateTimeExtensions.ToDanishPeriodText(
+                    DateOnly.FromDateTime(g.Min(x => x.Shift.StartUtc).ToDanishTime()),
+                    DateOnly.FromDateTime(g.Max(x => x.Shift.StartUtc).ToDanishTime())),
                 FreeShiftCount = g.Count(x => !x.IsMine && x.Free > 0),
                 IsSelected = g.Key == eventFilter
             })
