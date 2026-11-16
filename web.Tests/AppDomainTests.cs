@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
@@ -10,8 +11,8 @@ using web.Tests.Infrastructure;
 namespace web.Tests;
 
 /// <summary>
-/// App:Domain (step 19): kun domænet skrives. Links i mails er https i drift og http i udvikling, og systemet svarer kun
-/// på domænet og localhost.
+/// App:Domain (step 19): kun domænet skrives. Links i mails er https i drift og http i udvikling. Systemet svarer på alle
+/// adresser, også serverens IP-adresse over http (step 20), medmindre AllowedHosts er sat i hånden.
 /// </summary>
 public class AppDomainTests : IClassFixture<ProxyWebAppFactory>
 {
@@ -98,29 +99,55 @@ public class AppDomainTests : IClassFixture<ProxyWebAppFactory>
         Assert.Equal(expected, links.BaseUrl);
     }
 
-    private static Task<HttpContext> GetLoginAsync(WebAppFactory factory, string host) =>
+    private static Task<HttpContext> GetLoginAsync(WebAppFactory factory, string host, string scheme = "https") =>
         factory.Server.SendAsync(context =>
         {
             context.Request.Method = HttpMethods.Get;
             context.Request.Path = "/Account/Login";
             context.Request.Host = new HostString(host);
-            // I drift kræver anti-forgery https, så requesten kommer som fra proxyen.
-            context.Request.Scheme = "https";
+            context.Request.Scheme = scheme;
             context.Connection.RemoteIpAddress = IPAddress.Loopback;
         });
 
     [Theory]
-    [InlineData(WebAppFactory.Domain, StatusCodes.Status200OK)]
-    [InlineData("VAGTER.TEST", StatusCodes.Status200OK)]
-    [InlineData("localhost", StatusCodes.Status200OK)]
-    [InlineData("localhost:8080", StatusCodes.Status200OK)]
-    [InlineData("angriber.test", StatusCodes.Status400BadRequest)]
-    [InlineData("vagter.test.angriber.test", StatusCodes.Status400BadRequest)]
-    public async Task SvarerKunPaaDomaenetOgLocalhost(string host, int expectedStatus)
+    [InlineData(WebAppFactory.Domain, "https")]
+    [InlineData("VAGTER.TEST", "https")]
+    [InlineData("localhost", "http")]
+    [InlineData("localhost:8080", "http")]
+    [InlineData("10.64.70.51:8080", "http")]
+    [InlineData("andet.test", "http")]
+    public async Task SvarerPaaAlleAdresser_OverHttpOgHttps(string host, string scheme)
     {
-        var context = await GetLoginAsync(_factory, host);
+        var context = await GetLoginAsync(_factory, host, scheme);
 
-        Assert.Equal(expectedStatus, context.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task IDrift_OverHttpPaaIpAdressen_VirkerLoginUdenSecureCookies()
+    {
+        // Som http://<server>:8080 direkte, uden proxy (step 20).
+        using var browser = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("http://10.64.70.51:8080"),
+            AllowAutoRedirect = false,
+            HandleCookies = true
+        });
+
+        var loginPage = await browser.GetAsync("/Account/Login");
+        Assert.Equal(HttpStatusCode.OK, loginPage.StatusCode);
+
+        var login = await browser.PostFormAsync("/Account/Login", "/Account/Login",
+            ("UserName", WebAppFactory.AdminUserName), ("Password", WebAppFactory.AdminPassword));
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+
+        var cookies = loginPage.Headers.GetValues("Set-Cookie").Concat(login.Headers.GetValues("Set-Cookie")).ToList();
+        Assert.Contains(cookies, cookie => cookie.StartsWith("web.auth=", StringComparison.Ordinal));
+        Assert.All(cookies, cookie => Assert.DoesNotContain("; secure", cookie, StringComparison.OrdinalIgnoreCase));
+        Assert.False(login.Headers.Contains("Strict-Transport-Security"));
+
+        // Login-cookien sendes med over http, så en side bag login vises.
+        Assert.Equal(HttpStatusCode.OK, (await browser.GetAsync("/MyShifts")).StatusCode);
     }
 
     [Fact]

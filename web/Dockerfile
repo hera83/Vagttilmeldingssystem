@@ -1,5 +1,5 @@
 # web/Dockerfile: bygges med løsningens rod som context (docker compose gør det).
-# Forberedt i step 16, men endnu ikke bygget eller kørt. Kør: docker compose up -d --build
+# Kør: docker compose up -d --build
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY web/web.csproj web/

@@ -48,7 +48,7 @@ public class DockerReadinessTests : IClassFixture<ProxyWebAppFactory>
         Assert.Equal(IPAddress.Parse(ClientIp), context.Connection.RemoteIpAddress);
         Assert.True(context.Response.Headers.ContainsKey("Strict-Transport-Security"));
 
-        // Anti-forgery-cookien (og alle andre) er Secure i drift, ligesom login-cookien.
+        // Over https (her via proxyen) er anti-forgery-cookien (og alle andre) Secure, ligesom login-cookien.
         Assert.True(context.Response.Headers.SetCookie.Count > 0);
         Assert.All(context.Response.Headers.SetCookie, cookie => Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase));
     }
@@ -61,6 +61,11 @@ public class DockerReadinessTests : IClassFixture<ProxyWebAppFactory>
         Assert.Equal("http", context.Request.Scheme);
         Assert.Equal(IPAddress.Parse(UnknownPublicSender), context.Connection.RemoteIpAddress);
         Assert.False(context.Response.Headers.ContainsKey("Strict-Transport-Security"));
+
+        // Requesten behandles som http (step 20): login-siden vises, og cookies er uden Secure.
+        Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+        Assert.True(context.Response.Headers.SetCookie.Count > 0);
+        Assert.All(context.Response.Headers.SetCookie, cookie => Assert.DoesNotContain("; secure", cookie, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

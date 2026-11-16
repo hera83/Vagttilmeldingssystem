@@ -2,7 +2,6 @@ using System.Globalization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -166,14 +165,14 @@ builder.Services.AddDataProtection()
 // Bag en reverse proxy (step 16 og 19): X-Forwarded-For/-Proto fra samme maskine, private netværk og evt. ForwardedHeaders:*.
 builder.Services.Configure<ForwardedHeadersOptions>(options => ForwardedHeadersConfiguration.Apply(options, builder.Configuration));
 
-// App:Domain (step 19): links i mails (AppLinks) og de værter, systemet svarer på. En ugyldig værdi stopper opstarten her.
-// Er AllowedHosts sat til andet end *, vinder den. localhost er med, så systemet kan tjekkes fra selve serveren.
-var appDomain = AppLinks.ParseDomain(builder.Configuration[AppLinks.DomainKey]);
-var allowedHosts = builder.Configuration["AllowedHosts"]?.Trim();
-if (appDomain is not null && (string.IsNullOrEmpty(allowedHosts) || allowedHosts == "*"))
-{
-    builder.Services.PostConfigure<HostFilteringOptions>(options => options.AllowedHosts = [AppLinks.HostOf(appDomain), "localhost"]);
-}
+// App:Domain (step 19) bruges kun til links i mails (AppLinks). En ugyldig værdi stopper opstarten her.
+// Systemet svarer på alle adresser, både domænet via proxyen og serverens IP-adresse over http (step 20).
+// AllowedHosts (standard *) kan stadig begrænse det.
+AppLinks.ParseDomain(builder.Configuration[AppLinks.DomainKey]);
+
+// Cookies følger requesten (step 20): Secure over https (direkte eller via en betroet proxy), uden Secure over http,
+// så systemet også kan bruges på http://<server>:8080. Gælder login-, anti-forgery- og TempData-cookien.
+const CookieSecurePolicy cookieSecurePolicy = CookieSecurePolicy.SameAsRequest;
 
 // Authentication (authentication.md): cookie-login
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -185,7 +184,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "web.auth";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+        options.Cookie.SecurePolicy = cookieSecurePolicy;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.EventsType = typeof(UserCookieEvents);
@@ -193,8 +192,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddScoped<UserCookieEvents>();
 
-// Anti-forgery- og TempData-cookien følger login-cookien: altid Secure i drift (step 16). Standarden er uden Secure.
-var cookieSecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+// Anti-forgery- og TempData-cookien følger login-cookien (step 16 og 20). Anti-forgery-cookien er som standard altid uden
+// Secure, så begge sættes eksplicit.
 builder.Services.AddAntiforgery(options => options.Cookie.SecurePolicy = cookieSecurePolicy);
 builder.Services.Configure<CookieTempDataProviderOptions>(options => options.Cookie.SecurePolicy = cookieSecurePolicy);
 

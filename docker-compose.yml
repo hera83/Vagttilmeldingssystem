@@ -1,17 +1,17 @@
-# Vagttilmelding i Docker (forberedt i step 16, endnu ikke kørt).
+# Vagttilmelding i Docker.
 # 1. Kopiér .env.example til .env, og udfyld værdierne.
 # 2. docker compose up -d --build
-# Containeren kører kun http på 8080. https og WebSockets (live-opdatering) håndteres af en reverse proxy foran.
+# Containeren kører kun http på 8080. https og WebSockets (live-opdatering) på domænet håndteres af en reverse proxy foran.
 services:
   web:
     build:
       context: .
       dockerfile: web/Dockerfile
-    # Kun fra selve serveren (fx nginx på værten). Caddy i samme compose-fil bruger web:8080 og behøver ikke porten.
-    # Kører proxyen på en anden maskine, så skift til "8080:8080", og sørg for, at kun proxyen kan nå porten:
-    # systemet stoler på X-Forwarded-* fra private netværk.
+    # Åben på alle netkort (step 20): systemet kan bruges direkte på http://<server>:8080, og en reverse proxy
+    # (på serveren eller en anden maskine) sender https-trafikken på domænet hertil.
+    # Systemet stoler på X-Forwarded-* fra private netværk, så begræns porten med firewallen, hvis det er nødvendigt.
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     env_file: .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

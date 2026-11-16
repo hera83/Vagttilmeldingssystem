@@ -26,16 +26,16 @@ Et webbaseret system til at fordele praktiske vagter blandt forældre i en skole
 | Hvad | Hvorfor |
 |---|---|
 | En Linux-server med Docker Engine og Docker Compose v2 (`docker compose`) | Systemet kører i én container. |
-| Et domæne, fx `vagter.skolen.dk`, med en DNS-post, der peger på serveren | Login-cookien kræver https, og appen (PWA) og push virker kun over https. |
-| Port 80 og 443 åbne ind til serveren | Til reverse proxyen og dens certifikat fra Let's Encrypt. |
+| Et domæne, fx `vagter.skolen.dk`, med en DNS-post, der peger på reverse proxyen | Forældrene bruger systemet på domænet over https. Installation som app (PWA) og push virker kun over https. Uden domænet kan systemet kun bruges over http direkte på serveren (`http://<server>:8080`). |
+| Port 80 og 443 åbne ind til reverse proxyen | Til https og certifikatet fra Let's Encrypt. |
 | En postkasse til systemet hos en mailudbyder med SMTP og IMAP | Alle mails sendes herfra, og svar fra forældrene lander her og vises i **Indbakke**. |
 | Udgående https fra serveren | Push-beskeder sendes via browsernes push-tjenester (Google, Microsoft, Mozilla, Apple). |
 
 ## 2. Installation med Docker
 
-> **Bemærk:** Docker-opsætningen er forberedt og appen er testet i Production-tilstand, men containeren er endnu ikke bygget eller kørt på en rigtig server. Følg trinene, og kør røgtesten i afsnit 5 bagefter.
+> **Bemærk:** Kør røgtesten i afsnit 5, når systemet er installeret.
 
-Containeren hedder `web`, kører kun http på port **8080**, bruger dansk tid (`Europe/Copenhagen`) og gemmer alle data i to volumes:
+Containeren hedder `web`, kører kun http på port **8080** (åben på alle serverens netkort), bruger dansk tid (`Europe/Copenhagen`) og gemmer alle data i to volumes:
 
 | Volume | Indhold |
 |---|---|
@@ -97,7 +97,7 @@ Administratoren oprettes kun ved første opstart, når der endnu ingen brugere e
 |---|---|---|---|
 | `App__Domain` | Kun domænet, brugerne åbner systemet på, fx `vagter.skolen.dk`. Uden `https://` og uden `/`. | Ja | Nej |
 
-Systemet sætter selv `https://` foran og bruger adressen til links i mails (invitation, glemt adgangskode, bekræftelser og påmindelser). Uden domænet kan der ikke sendes invitationer eller links til ny adgangskode. Systemet svarer kun på domænet (og på `localhost`, så det kan tjekkes fra selve serveren), og åbnes det på en anden adresse, svarer det **400 Bad Request**.
+Systemet sætter selv `https://` foran og bruger adressen til links i mails (invitation, glemt adgangskode, bekræftelser og påmindelser). Uden domænet kan der ikke sendes invitationer eller links til ny adgangskode. Domænet bruges kun til links: systemet svarer på alle adresser, både på domænet via proxyen og direkte over http på serverens adresse, fx `http://10.0.0.20:8080`.
 
 Den reverse proxy foran (afsnit 4) skal ikke sættes op i `.env`. Systemet stoler automatisk på en proxy på samme server, i Docker eller på jeres lokale netværk.
 
@@ -198,9 +198,18 @@ DataRetention__NotificationDays=90
 
 Efter en ændring i `.env`: `docker compose up -d` (genskaber containeren med de nye værdier).
 
-## 4. https og reverse proxy
+## 4. https, http og reverse proxy
 
-Systemet kører kun http i containeren. En reverse proxy foran skal:
+Systemet kører kun http i containeren og kan bruges på to måder på samme tid:
+
+| Adresse | Sådan | Virker |
+|---|---|---|
+| `https://<jeres-domæne>/` | Via en reverse proxy foran | Alt, også installation som app og push |
+| `http://<server>:8080/` | Direkte på serveren, uden proxy | Login, tilmelding og administration. Browserne tillader ikke installation som app og push over http. |
+
+Login-cookien følger forbindelsen: over https er den `Secure` (sendes kun krypteret), og over http er den uden. Links i mails peger altid på `https://<jeres-domæne>`.
+
+En reverse proxy foran skal:
 
 - stå for https-certifikatet,
 - sende WebSocket-forbindelser videre (live-opdatering på `/hubs/shifts`),
@@ -208,7 +217,21 @@ Systemet kører kun http i containeren. En reverse proxy foran skal:
 
 Systemet stoler på de headere, når de kommer fra samme server, fra Docker eller fra et privat netværk (10.x, 172.16–31.x, 192.168.x). Der skal ikke sættes noget i `.env`.
 
-Port `8080` er i `docker-compose.yml` kun åben fra selve serveren (`127.0.0.1:8080`), så systemet ikke kan nås uden om proxyen. Det passer til begge eksempler nedenfor. Kører proxyen på en anden maskine (fx en NAS eller router), så skift linjen til `"8080:8080"`, og sørg med firewallen for, at kun proxyen kan nå porten.
+Port `8080` er i `docker-compose.yml` åben på alle serverens netkort (`"8080:8080"`), så både proxyen og browsere på netværket kan nå den. Skal systemet kun kunne nås via en proxy på selve serveren (Caddy eller nginx nedenfor), så skift linjen til `"127.0.0.1:8080:8080"`. Husk, at `ufw` ikke blokerer porte, som Docker åbner (det kræver en regel i iptables-kæden `DOCKER-USER`).
+
+### Nginx Proxy Manager eller en anden proxy på en anden maskine
+
+Opret en **Proxy Host**:
+
+| Felt | Værdi |
+|---|---|
+| Domain Names | `vagter.skolen.dk` |
+| Scheme | `http` |
+| Forward Hostname / IP | Serverens IP-adresse, fx `10.0.0.20` |
+| Forward Port | `8080` |
+| Websockets Support | Til |
+
+Vælg **Request a new SSL Certificate** på fanen **SSL**, og slå **Force SSL** til. DNS-posten for domænet skal pege på proxyen (routeren sender port 80 og 443 videre til den), ikke på systemets server.
 
 ### Caddy i samme compose-fil (anbefalet)
 
@@ -285,7 +308,7 @@ server {
 **Røgtest**
 1. `docker compose ps`: `web` kører. `docker compose logs web`: ingen fejl. Ved første start er disse advarsler forventede: "No XML encryptor configured" (nøglerne ligger ukrypteret i volumen), "Failed to determine the https port for redirect" (https håndteres af proxyen) og advarsler om push, mail eller `App:Domain`, hvis de ikke er sat.
 2. `docker compose exec web date`: klokken er dansk tid (CET/CEST).
-3. Login-siden vises med hængelås i browseren.
+3. Login-siden vises med hængelås i browseren på `https://<jeres-domæne>/` og uden hængelås på `http://<server>:8080/`.
 4. **Dashboard** → **Beskeder og påmindelser** viser, at push og e-mail er sat op.
 5. Opret en testbruger med invitation: mailen kommer frem, og linket starter med `https://` og jeres domæne.
 6. **Min profil** → **Slå push til** → **Send testbesked**: beskeden kommer frem.
@@ -386,8 +409,11 @@ docker compose start web
 | Symptom | Årsag | Løsning |
 |---|---|---|
 | Ingen kan logge ind efter første opstart | `Users__InitialAdmin__*` var ikke sat, da databasen blev oprettet | Sæt begge værdier. Er der endnu ingen data, så stop systemet, slet volumen `<projekt>_web_app_dbs`, og start igen. |
-| **400 Bad Request** | Systemet er åbnet på en anden adresse end `App__Domain`, fx serverens IP-adresse | Brug domænet. Tjek, at `App__Domain` er stavet rigtigt, og at proxyen sender den oprindelige `Host` videre. |
-| "Der opstod en fejl", når login-siden åbnes | Siden er åbnet direkte over http (fx `http://<server>:8080`) uden om proxyen, eller proxyen sender ikke `X-Forwarded-Proto` | Åbn systemet via `https://` og domænet. Tjek proxyens headers. |
+| Intet svar på `http://<server>:8080` | Containeren kører ikke, porten er kun åben lokalt (`127.0.0.1:8080:8080`), eller en firewall blokerer | `docker compose ps` og `docker compose logs web`. Tjek linjen under `ports:` i `docker-compose.yml`. Fra selve serveren: `curl -I http://localhost:8080/` skal give `302 Found`. |
+| `ERR_NAME_NOT_RESOLVED` på domænet | DNS-posten mangler, eller pc'en husker et svar fra før den fandtes | Tjek DNS-posten hos udbyderen. Kør `ipconfig /flushdns` (Windows), og genstart browseren. |
+| 404 eller certifikatfejl fra proxyen på domænet | Proxyen har ingen opsætning til domænet | Opret en proxy host med certifikat (afsnit 4). |
+| Appen kan ikke installeres, og push kan ikke slås til | Systemet er åbnet over http | Brug `https://` og domænet. Browserne tillader det kun over https. |
+| **400 Bad Request** | `AllowedHosts` er sat og indeholder ikke adressen | Fjern `AllowedHosts`, eller tilføj adressen. |
 | Login virker ikke eller **For mange forsøg** for mange brugere på én gang bag en proxy på en anden maskine | Proxyen har en offentlig IP-adresse og er derfor ikke betroet | Sæt `ForwardedHeaders__KnownProxies` til proxyens adresse (afsnit 4), og kør `docker compose up -d`. |
 | Systemet starter ikke: "App:Domain indeholder …" | Der står mere end domænet, fx en sti | Skriv kun domænet, fx `vagter.skolen.dk`. |
 | Systemet starter ikke: "ForwardedHeaders:KnownNetworks indeholder …" | Ugyldig værdi | Brug IP-adresser i `KnownProxies` og netværk med `/` i `KnownNetworks`, fx `203.0.113.0/24`. |

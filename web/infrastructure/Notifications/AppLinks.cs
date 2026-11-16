@@ -70,10 +70,6 @@ public sealed class AppLinks(IConfiguration configuration, IHostEnvironment envi
         return uri.IsDefaultPort ? host : $"{host}:{uri.Port}";
     }
 
-    /// <summary>Værtsnavnet uden port, til AllowedHosts.</summary>
-    public static string HostOf(string domain) =>
-        new Uri("https://" + domain, UriKind.Absolute).Host;
-
     // urls fra launch-profilen, fx "https://localhost:7180;http://localhost:5180". http foretrækkes i udvikling.
     // Lytter appen på alle adresser (0.0.0.0, [::], *, +), bruges localhost.
     private static string? DevelopmentUrl(string? urls)
