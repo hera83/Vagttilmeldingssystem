@@ -1,0 +1,16 @@
+@* Bekræftelsesdialog til formularer med data-confirm (site.js fylder overskrift, tekst og knap). Uden JavaScript sendes formularen uden bekræftelse. *@
+<dialog class="modal" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message" data-confirm-dialog>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="confirm-dialog-title" data-confirm-title>Er du sikker?</h2>
+            <button type="button" class="modal-close" aria-label="Luk" data-confirm-cancel><icon name="x" /></button>
+        </div>
+        <div class="modal-body">
+            <p id="confirm-dialog-message" data-confirm-message></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-confirm-cancel data-confirm-default>Annuller</button>
+            <button type="button" class="btn btn-primary" data-confirm-ok>Bekræft</button>
+        </div>
+    </div>
+</dialog>

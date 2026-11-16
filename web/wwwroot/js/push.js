@@ -47,6 +47,15 @@
         hint.hidden = !message;
     }
 
+    // Resultatet af et klik vises som en toast (site.js). Forklaringer på tilstanden (fx blokeret) står i panelet.
+    function notify(message, type) {
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, { type: type });
+        } else {
+            showHint(message);
+        }
+    }
+
     function token() {
         var input = document.querySelector('input[name="__RequestVerificationToken"]');
         return input ? input.value : '';
@@ -147,14 +156,19 @@
                 return null;
             }
             if (permission !== 'granted') {
-                setState('off', 'Push blev ikke slået til.');
+                setState('off');
+                notify('Push blev ikke slået til.', 'info');
                 return null;
             }
             return navigator.serviceWorker.ready
                 .then(subscribe)
-                .then(function () { setState('on', 'Push er slået til. Du får besked, når der åbnes for nye vagter.'); });
+                .then(function () {
+                    setState('on');
+                    notify('Push er slået til. Du får besked, når der åbnes for nye vagter.', 'success');
+                });
         }).catch(function () {
-            setState('off', 'Push kunne ikke slås til. Prøv igen senere.');
+            setState('off');
+            notify('Push kunne ikke slås til. Prøv igen senere.', 'error');
         });
     });
 
@@ -167,22 +181,22 @@
                 var endpoint = subscription.endpoint;
                 return subscription.unsubscribe().then(function () { return post('/Push/Unsubscribe', { endpoint: endpoint }); });
             })
-            .then(function () { setState('off', 'Push er slået fra på denne enhed.'); })
-            .catch(function () { setState('on', 'Push kunne ikke slås fra. Prøv igen.'); });
+            .then(function () { setState('off'); notify('Push er slået fra på denne enhed.', 'success'); })
+            .catch(function () { setState('on'); notify('Push kunne ikke slås fra. Prøv igen.', 'error'); });
     });
 
     testButton.addEventListener('click', function () {
         testButton.disabled = true;
         post('/Push/Test').then(function (response) {
             if (response.ok) {
-                showHint('Testbeskeden er sendt. Den kommer normalt inden for få sekunder.');
+                notify('Testbeskeden er sendt. Den kommer normalt inden for få sekunder.', 'success');
             } else if (response.status === 404) {
-                showHint('Serveren kender ikke denne enhed. Slå push fra og til igen.');
+                notify('Serveren kender ikke denne enhed. Slå push fra og til igen.', 'warning');
             } else {
-                showHint('Testbeskeden kunne ikke sendes.');
+                notify('Testbeskeden kunne ikke sendes.', 'error');
             }
         }).catch(function () {
-            showHint('Testbeskeden kunne ikke sendes.');
+            notify('Testbeskeden kunne ikke sendes.', 'error');
         }).finally(function () {
             setTimeout(function () { testButton.disabled = false; }, 5000);
         });

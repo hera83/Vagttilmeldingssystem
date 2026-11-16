@@ -31,11 +31,11 @@
         }
         else
         {
-            <form asp-action="Archive" asp-route-id="@Model.Id" method="post" data-confirm="Vil du arkivere @Model.Name? Den skjules fra listen over aktive begivenheder.">
+            <form asp-action="Archive" asp-route-id="@Model.Id" method="post" data-confirm-title="Arkivér begivenhed" data-confirm="Vil du arkivere @Model.Name? Den skjules fra listen over aktive begivenheder.">
                 <button type="submit" class="btn btn-ghost"><icon name="archive" />Arkivér</button>
             </form>
         }
-        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" data-confirm="Vil du slette @Model.Name? Det kan ikke fortrydes.">
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" data-confirm-title="Slet begivenhed" data-confirm="Vil du slette @Model.Name? Det kan ikke fortrydes.">
             <button type="submit" class="btn btn-danger"><icon name="trash" />Slet</button>
         </form>
     </div>
@@ -98,7 +98,7 @@
                                 <td class="actions">
                                     <a class="btn btn-ghost btn-sm" asp-controller="Shifts" asp-action="Assign" asp-route-id="@shift.Id" title="Tildel"><icon name="user-plus" /><span class="btn-label">Tildel</span><span class="visually-hidden"> personer til @shift.Title</span></a>
                                     <a class="btn btn-ghost btn-sm" asp-controller="Shifts" asp-action="Edit" asp-route-id="@shift.Id" title="Ret"><icon name="edit" /><span class="btn-label">Ret</span><span class="visually-hidden"> @shift.Title</span></a>
-                                    <form asp-controller="Shifts" asp-action="Delete" asp-route-id="@shift.Id" method="post" data-confirm="Vil du slette vagten @shift.Title? Det kan ikke fortrydes.">
+                                    <form asp-controller="Shifts" asp-action="Delete" asp-route-id="@shift.Id" method="post" data-confirm-title="Slet vagt" data-confirm="Vil du slette vagten @shift.Title? Det kan ikke fortrydes.">
                                         <button type="submit" class="btn btn-danger btn-sm" title="Slet"><icon name="trash" /><span class="btn-label">Slet</span><span class="visually-hidden"> @shift.Title</span></button>
                                     </form>
                                 </td>

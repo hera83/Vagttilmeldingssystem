@@ -13,7 +13,7 @@
         <a class="btn btn-secondary" asp-action="Export" asp-route-id="@Model.Id" title="Alle oplysninger om brugeren som JSON-fil (indsigt)"><icon name="download" />Hent data</a>
         @if (!Model.IsCurrentUser)
         {
-            <form asp-action="Anonymize" asp-route-id="@Model.Id" method="post"
+            <form asp-action="Anonymize" asp-route-id="@Model.Id" method="post" data-confirm-title="Anonymisér bruger"
                   data-confirm="Vil du anonymisere @Model.DisplayName? Profil, push og ventende beskeder slettes, brugeren kan ikke logge ind igen, og vagthistorikken står som »Slettet bruger«. Det kan ikke fortrydes.">
                 <button type="submit" class="btn btn-danger"><icon name="eye-off" />Anonymisér</button>
             </form>

@@ -67,14 +67,7 @@
         <main id="main" class="main" tabindex="-1">
             <div class="alert alert-warning live-status" data-offline-status role="status" tabindex="-1" hidden><icon name="wifi-off" /><span><strong>Du er offline</strong> – tilmelding kræver internet.</span></div>
             <div class="alert alert-warning live-status" data-live-status role="status" aria-live="polite" hidden></div>
-            @if (TempData["Success"] is string success)
-            {
-                <div class="alert alert-success" role="status"><icon name="check-circle" /><span>@success</span></div>
-            }
-            @if (TempData["Error"] is string error)
-            {
-                <div class="alert alert-error" role="alert"><icon name="alert-triangle" /><span>@error</span></div>
-            }
+            <partial name="_Toasts" />
             @RenderBody()
         </main>
     </div>
@@ -88,6 +81,8 @@
             <a asp-controller="Profile" asp-action="Index" aria-current="@Current("Profile")"><icon name="user" /><span>Profil</span></a>
         </nav>
     }
+
+    <partial name="_ConfirmDialog" />
 
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/pwa.js" asp-append-version="true"></script>

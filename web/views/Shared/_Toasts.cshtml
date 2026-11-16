@@ -1,0 +1,16 @@
+@* Toast-beskeder: site.js (window.showToast) viser dem øverst til højre, og de lukker af sig selv.
+   TempData["Success"] og ["Error"] sendes som <template data-toast>, som site.js viser ved sidevisning.
+   Uden JavaScript vises de som almindelige beskeder (noscript). Oplæsning sker via de to skjulte live-regioner. *@
+<div class="toast-region" data-toast-region></div>
+<div class="visually-hidden" aria-live="polite" data-toast-announce="polite"></div>
+<div class="visually-hidden" aria-live="assertive" data-toast-announce="assertive"></div>
+@if (TempData["Success"] is string success)
+{
+    <template data-toast="success">@success</template>
+    <noscript><div class="alert alert-success" role="status"><icon name="check-circle" /><span>@success</span></div></noscript>
+}
+@if (TempData["Error"] is string error)
+{
+    <template data-toast="error">@error</template>
+    <noscript><div class="alert alert-error" role="alert"><icon name="alert-triangle" /><span>@error</span></div></noscript>
+}

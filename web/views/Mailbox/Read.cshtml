@@ -16,6 +16,7 @@
             <button type="submit" class="btn btn-secondary"><icon name="mail" />Markér som ulæst</button>
         </form>
         <form asp-action="Delete" asp-route-id="@Model.Uid" asp-route-folder="@Model.Folder" method="post"
+              data-confirm-title="@(Model.IsTrash ? "Slet mail" : "Flyt til Papirkurv")"
               data-confirm="@(Model.IsTrash ? "Vil du slette mailen helt? Det kan ikke fortrydes." : "Vil du flytte mailen til Papirkurv?")">
             <button type="submit" class="btn btn-danger"><icon name="trash" />@(Model.IsTrash ? "Slet helt" : "Slet")</button>
         </form>

@@ -49,7 +49,7 @@
                             <strong>@person.DisplayName@(person.IsCurrentUser ? " (dig)" : "")</strong>
                             <span class="muted small">@person.UserName · @(person.IsAdminAssigned ? "Tildelt af administrator" : "Selv tilmeldt") @person.AssignedText</span>
                         </span>
-                        <form asp-action="Unassign" asp-route-id="@Model.ShiftId" method="post" data-confirm="Vil du fjerne @person.DisplayName fra vagten? Pladsen bliver ledig igen.">
+                        <form asp-action="Unassign" asp-route-id="@Model.ShiftId" method="post" data-confirm-title="Fjern fra vagten" data-confirm="Vil du fjerne @person.DisplayName fra vagten? Pladsen bliver ledig igen.">
                             <input type="hidden" name="assignmentId" value="@person.AssignmentId" />
                             <button type="submit" class="btn btn-danger btn-sm"><icon name="x" />Fjern<span class="visually-hidden"> @person.DisplayName</span></button>
                         </form>
