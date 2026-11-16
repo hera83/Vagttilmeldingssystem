@@ -7,30 +7,39 @@ using web.Tests.Infrastructure;
 
 namespace web.Tests;
 
-/// <summary>Drift bag en reverse proxy og i en container (step 16): X-Forwarded-* og data protection-nøgler.</summary>
+/// <summary>
+/// Drift bag en reverse proxy og i en container (step 16 og 19): X-Forwarded-* og data protection-nøgler.
+/// Private netværk og samme maskine er betroet uden konfiguration. Alle andre afsendere ignoreres, medmindre de står i ForwardedHeaders:*.
+/// </summary>
 public class DockerReadinessTests : IClassFixture<ProxyWebAppFactory>
 {
-    private const string ClientIp = "203.0.113.7";
+    private const string ClientIp = "198.51.100.7";
+    private const string UnknownPublicSender = "192.0.2.9";
 
     private readonly ProxyWebAppFactory _factory;
 
     public DockerReadinessTests(ProxyWebAppFactory factory) => _factory = factory;
 
-    private Task<HttpContext> SendAsync(WebAppFactory factory, string remoteIp) =>
+    private static Task<HttpContext> SendAsync(WebAppFactory factory, string remoteIp) =>
         factory.Server.SendAsync(context =>
         {
             context.Request.Method = HttpMethods.Get;
             context.Request.Path = "/Account/Login";
-            context.Request.Host = new HostString("vagter.test");
+            context.Request.Host = new HostString(WebAppFactory.Domain);
             context.Connection.RemoteIpAddress = IPAddress.Parse(remoteIp);
             context.Request.Headers["X-Forwarded-For"] = ClientIp;
             context.Request.Headers["X-Forwarded-Proto"] = "https";
         });
 
     [Theory]
-    [InlineData(ProxyWebAppFactory.KnownProxy)]
-    [InlineData("192.168.50.20")]
-    public async Task FraKendtProxy_SesKlientensIpOgHttps(string proxyIp)
+    [InlineData("10.0.0.5")]                       // privat netværk
+    [InlineData("172.18.0.3")]                     // Dockers netværk (Caddy i compose, nginx på værten)
+    [InlineData("192.168.1.20")]                   // proxy på LAN (fx NAS eller router)
+    [InlineData("::ffff:172.18.0.3")]              // IPv4 som IPv6, som Kestrel ser det, når den lytter på [::]
+    [InlineData("fd00::5")]                        // privat IPv6 (ULA)
+    [InlineData(ProxyWebAppFactory.ConfiguredProxy)]
+    [InlineData("100.64.1.20")]                    // i ForwardedHeaders:KnownNetworks
+    public async Task FraBetroetAfsender_SesKlientensIpOgHttps(string proxyIp)
     {
         var context = await SendAsync(_factory, proxyIp);
 
@@ -40,31 +49,34 @@ public class DockerReadinessTests : IClassFixture<ProxyWebAppFactory>
         Assert.True(context.Response.Headers.ContainsKey("Strict-Transport-Security"));
 
         // Anti-forgery-cookien (og alle andre) er Secure i drift, ligesom login-cookien.
-        Assert.NotEmpty(context.Response.Headers.SetCookie);
+        Assert.True(context.Response.Headers.SetCookie.Count > 0);
         Assert.All(context.Response.Headers.SetCookie, cookie => Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
-    public async Task FraUkendtAfsender_IgnoreresHeaderne()
+    public async Task FraUkendtOffentligAfsender_IgnoreresHeaderne()
     {
-        var context = await SendAsync(_factory, "198.51.100.9");
+        var context = await SendAsync(_factory, UnknownPublicSender);
 
         Assert.Equal("http", context.Request.Scheme);
-        Assert.Equal(IPAddress.Parse("198.51.100.9"), context.Connection.RemoteIpAddress);
+        Assert.Equal(IPAddress.Parse(UnknownPublicSender), context.Connection.RemoteIpAddress);
         Assert.False(context.Response.Headers.ContainsKey("Strict-Transport-Security"));
     }
 
     [Fact]
-    public async Task UdenKonfiguration_StolerKunPaaSammeMaskine()
+    public async Task UdenKonfiguration_StolerPaaSammeMaskineOgPrivateNetvaerk()
     {
         using var factory = new WebAppFactory();
 
-        var remote = await SendAsync(factory, ProxyWebAppFactory.KnownProxy);
         var local = await SendAsync(factory, "127.0.0.1");
+        var docker = await SendAsync(factory, "172.18.0.3");
+        var publicProxy = await SendAsync(factory, ProxyWebAppFactory.ConfiguredProxy);
 
-        Assert.Equal("http", remote.Request.Scheme);
         Assert.Equal("https", local.Request.Scheme);
-        Assert.Equal(IPAddress.Parse(ClientIp), local.Connection.RemoteIpAddress);
+        Assert.Equal("https", docker.Request.Scheme);
+        Assert.Equal(IPAddress.Parse(ClientIp), docker.Connection.RemoteIpAddress);
+        Assert.Equal("http", publicProxy.Request.Scheme);
+        Assert.Equal(IPAddress.Parse(ProxyWebAppFactory.ConfiguredProxy), publicProxy.Connection.RemoteIpAddress);
     }
 
     [Theory]
@@ -82,7 +94,7 @@ public class DockerReadinessTests : IClassFixture<ProxyWebAppFactory>
     [Fact]
     public async Task DataProtectionNoegler_GemmesIAppDbs()
     {
-        await SendAsync(_factory, ProxyWebAppFactory.KnownProxy);
+        await SendAsync(_factory, "172.18.0.3");
 
         var keys = Path.Combine(_factory.RootPath, "app_dbs", "keys");
         Assert.NotEmpty(Directory.GetFiles(keys, "key-*.xml"));

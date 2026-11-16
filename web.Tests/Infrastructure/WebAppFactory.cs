@@ -30,7 +30,10 @@ public class WebAppFactory : WebApplicationFactory<Program>
     /// <summary>Falsk mail-service (sender intet). Testene kan se, hvilke mails der er "sendt".</summary>
     public FakeMailService Mail { get; } = new();
 
-    public const string BaseUrl = "http://vagter.test";
+    /// <summary>App:Domain i testene. I Development bliver links i mails http://vagter.test (se BaseUrl).</summary>
+    public const string Domain = "vagter.test";
+
+    public const string BaseUrl = "http://" + Domain;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -45,7 +48,7 @@ public class WebAppFactory : WebApplicationFactory<Program>
         builder.UseSetting("Reminders:Enabled", "false");
         // Rate limiting er slået fra, fordi testene logger ind mange gange fra samme adresse (se SecurityTests).
         builder.UseSetting("RateLimiting:Enabled", "false");
-        builder.UseSetting("App:BaseUrl", BaseUrl);
+        builder.UseSetting("App:Domain", Domain);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IPushService>();

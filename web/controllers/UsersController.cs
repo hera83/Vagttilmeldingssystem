@@ -66,7 +66,7 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
                     ModelState.AddModelError(nameof(model.UserName), "Der findes allerede en bruger med denne e-mail.");
                     break;
                 default:
-                    ModelState.AddModelError(string.Empty, "Der kan ikke sendes e-mails, fordi e-mail (Mail) eller App:BaseUrl ikke er sat op. Fjern fluebenet ved Send invitation på e-mail, og skriv en adgangskode i stedet.");
+                    ModelState.AddModelError(string.Empty, "Der kan ikke sendes e-mails, fordi e-mail (Mail) eller App:Domain ikke er sat op. Fjern fluebenet ved Send invitation på e-mail, og skriv en adgangskode i stedet.");
                     break;
             }
 
@@ -216,7 +216,7 @@ public class UsersController(IUserRepository userRepository, IMemberManager memb
                 TempData["Error"] = "Brugeren er deaktiveret. Gør brugeren aktiv under Ret først.";
                 break;
             default:
-                TempData["Error"] = "Der kan ikke sendes e-mails, fordi e-mail (Mail) eller App:BaseUrl ikke er sat op.";
+                TempData["Error"] = "Der kan ikke sendes e-mails, fordi e-mail (Mail) eller App:Domain ikke er sat op.";
                 break;
         }
 

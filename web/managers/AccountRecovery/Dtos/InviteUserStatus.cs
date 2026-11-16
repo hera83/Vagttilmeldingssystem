@@ -5,6 +5,6 @@ public enum InviteUserStatus
     Success,
     UserNameTaken,
 
-    /// <summary>Mail (Mail:*) eller App:BaseUrl er ikke sat op, så der kan ikke sendes et link.</summary>
+    /// <summary>Mail (Mail:*) eller App:Domain er ikke sat op, så der kan ikke sendes et link.</summary>
     MailNotConfigured
 }

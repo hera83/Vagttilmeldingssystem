@@ -7,8 +7,11 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+    # Kun fra selve serveren (fx nginx på værten). Caddy i samme compose-fil bruger web:8080 og behøver ikke porten.
+    # Kører proxyen på en anden maskine, så skift til "8080:8080", og sørg for, at kun proxyen kan nå porten:
+    # systemet stoler på X-Forwarded-* fra private netværk.
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     env_file: .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

@@ -78,7 +78,7 @@ public class AccountRecoveryManager(
         if (!await CanSendLinksAsync(cancellationToken))
         {
             // Samme svar til brugeren uanset hvad. Driften kan se det i loggen.
-            logger.LogWarning("Password reset requested, but mail or App:BaseUrl is not configured");
+            logger.LogWarning("Password reset requested, but mail or App:Domain is not configured");
             return;
         }
 

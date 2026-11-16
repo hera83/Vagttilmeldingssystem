@@ -82,7 +82,7 @@ public class NotificationWorker(
 
             if (scope.ServiceProvider.GetRequiredService<AppLinks>().BaseUrl is null)
             {
-                logger.LogWarning("App:BaseUrl is not set: invitations and password resets cannot be sent, and other e-mails have no links.");
+                logger.LogWarning("App:Domain is not set: invitations and password resets cannot be sent, and other e-mails have no links.");
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

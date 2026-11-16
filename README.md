@@ -91,16 +91,15 @@ Docker sætter projektnavnet foran, fx `vagttilmeldingssystem_web_app_dbs`. Se d
 
 Administratoren oprettes kun ved første opstart, når der endnu ingen brugere er. Skift adgangskoden efter første login, og fjern derefter `Users__InitialAdmin__Password` fra `.env`.
 
-### Adresse og reverse proxy
+### Domæne
 
 | Nøgle | Udfyld med | Påkrævet | Secret |
 |---|---|---|---|
-| `App__BaseUrl` | Adressen, brugerne åbner systemet på, med https og uden `/` til sidst, fx `https://vagter.skolen.dk`. Bruges til links i mails. Uden den kan der ikke sendes invitationer eller links til ny adgangskode. | Ja | Nej |
-| `ForwardedHeaders__KnownNetworks` | Netværket, den reverse proxy kommer fra. Kører proxyen i Docker eller på samme server: `172.16.0.0/12` (Dockers netværk). Flere adskilles med komma. | Ja, bag en proxy | Nej |
-| `ForwardedHeaders__KnownProxies` | Alternativ til ovenstående: proxyens præcise IP-adresser, adskilt med komma. Tom: kun proxies på samme maskine. | Nej | Nej |
-| `AllowedHosts` | Valgfrit: kun svar på jeres domæne, fx `vagter.skolen.dk`. Fjern `#` foran linjen for at bruge den. Standard: alle. | Nej | Nej |
+| `App__Domain` | Kun domænet, brugerne åbner systemet på, fx `vagter.skolen.dk`. Uden `https://` og uden `/`. | Ja | Nej |
 
-Uden `ForwardedHeaders__*` stoler systemet ikke på proxyen. Så tror det, at siden serveres over http, login virker ikke, og alle brugere deler én grænse for **For mange forsøg**.
+Systemet sætter selv `https://` foran og bruger adressen til links i mails (invitation, glemt adgangskode, bekræftelser og påmindelser). Uden domænet kan der ikke sendes invitationer eller links til ny adgangskode. Systemet svarer kun på domænet (og på `localhost`, så det kan tjekkes fra selve serveren), og åbnes det på en anden adresse, svarer det **400 Bad Request**.
+
+Den reverse proxy foran (afsnit 4) skal ikke sættes op i `.env`. Systemet stoler automatisk på en proxy på samme server, i Docker eller på jeres lokale netværk.
 
 ### Push-beskeder
 
@@ -161,11 +160,7 @@ Push__PublicKey=<offentlig-nøgle-fra-generate-vapid-keys>
 Push__PrivateKey=<privat-nøgle-fra-generate-vapid-keys>
 Push__Subject=mailto:admin@skolen.dk
 
-App__BaseUrl=https://vagter.skolen.dk
-
-ForwardedHeaders__KnownProxies=
-ForwardedHeaders__KnownNetworks=172.16.0.0/12
-AllowedHosts=vagter.skolen.dk
+App__Domain=vagter.skolen.dk
 
 Mail__FromAddress=vagter@skolen.dk
 Mail__FromName=Vagttilmelding
@@ -211,7 +206,9 @@ Systemet kører kun http i containeren. En reverse proxy foran skal:
 - sende WebSocket-forbindelser videre (live-opdatering på `/hubs/shifts`),
 - sende headerne `X-Forwarded-For` og `X-Forwarded-Proto`.
 
-Porten `8080` er åben på serveren i `docker-compose.yml`. Kører proxyen på samme server, så skift linjen under `ports:` til `"127.0.0.1:8080:8080"`, så systemet ikke kan nås uden om proxyen.
+Systemet stoler på de headere, når de kommer fra samme server, fra Docker eller fra et privat netværk (10.x, 172.16–31.x, 192.168.x). Der skal ikke sættes noget i `.env`.
+
+Port `8080` er i `docker-compose.yml` kun åben fra selve serveren (`127.0.0.1:8080`), så systemet ikke kan nås uden om proxyen. Det passer til begge eksempler nedenfor. Kører proxyen på en anden maskine (fx en NAS eller router), så skift linjen til `"8080:8080"`, og sørg med firewallen for, at kun proxyen kan nå porten.
 
 ### Caddy i samme compose-fil (anbefalet)
 
@@ -241,8 +238,6 @@ vagter.skolen.dk {
     reverse_proxy web:8080
 }
 ```
-
-Sæt `ForwardedHeaders__KnownNetworks=172.16.0.0/12` i `.env`.
 
 ### nginx på serveren
 
@@ -277,7 +272,7 @@ server {
 }
 ```
 
-Forbindelser fra nginx på værten til containeren kommer også fra Dockers netværk, så sæt `ForwardedHeaders__KnownNetworks=172.16.0.0/12` her også.
+**En proxy med en offentlig IP-adresse** (fx hos en hostingudbyder) er ikke betroet af sig selv. Sæt så dens adresse i `ForwardedHeaders__KnownProxies` (flere adskilles med komma) eller et netværk i `ForwardedHeaders__KnownNetworks`, fx `203.0.113.0/24`.
 
 ## 5. Første login og røgtest
 
@@ -288,11 +283,11 @@ Forbindelser fra nginx på værten til containeren kommer også fra Dockers netv
 4. Opret forældrene under **Brugere** → **Opret bruger** med **Send invitation på e-mail**. De vælger selv adgangskode via linket i mailen.
 
 **Røgtest**
-1. `docker compose ps`: `web` kører. `docker compose logs web`: ingen fejl. Ved første start er disse advarsler forventede: "No XML encryptor configured" (nøglerne ligger ukrypteret i volumen), "Failed to determine the https port for redirect" (https håndteres af proxyen) og advarsler om push, mail eller `App:BaseUrl`, hvis de ikke er sat.
+1. `docker compose ps`: `web` kører. `docker compose logs web`: ingen fejl. Ved første start er disse advarsler forventede: "No XML encryptor configured" (nøglerne ligger ukrypteret i volumen), "Failed to determine the https port for redirect" (https håndteres af proxyen) og advarsler om push, mail eller `App:Domain`, hvis de ikke er sat.
 2. `docker compose exec web date`: klokken er dansk tid (CET/CEST).
 3. Login-siden vises med hængelås i browseren.
 4. **Dashboard** → **Beskeder og påmindelser** viser, at push og e-mail er sat op.
-5. Opret en testbruger med invitation: mailen kommer frem, og linket starter med `App__BaseUrl`.
+5. Opret en testbruger med invitation: mailen kommer frem, og linket starter med `https://` og jeres domæne.
 6. **Min profil** → **Slå push til** → **Send testbesked**: beskeden kommer frem.
 7. Åbn **Ledige vagter** i to browsere, og åbn for en testvagt som administrator: vagten dukker op uden genindlæsning (WebSocket gennem proxyen).
 8. `docker compose restart web`: du er stadig logget ind bagefter.
@@ -361,16 +356,13 @@ docker compose start web
          "Password": "<lokal-adgangskode-på-mindst-12-tegn>"
        }
      },
-     "App": {
-       "BaseUrl": "http://localhost:5180"
-     },
      "Mail": {
        "FromAddress": "vagter@vagttilmelding.local",
        "PickupDirectory": "app_files/MailPickup"
      }
    }
    ```
-   Med `Mail:PickupDirectory` gemmes mails som `.eml`-filer i `web/app_files/MailPickup/` i stedet for at blive sendt. Push kræver et lokalt nøglepar: `dotnet run --project web -- --generate-vapid-keys`, og sæt `Push:PublicKey`, `Push:PrivateKey` og `Push:Subject`. **Indbakke** kræver en rigtig postkasse i `Mail:Imap:*`.
+   Links i mails bruger af sig selv appens egen http-adresse fra launch-profilen (`http://localhost:5180`), så `App:Domain` skal ikke sættes lokalt. Med `Mail:PickupDirectory` gemmes mails som `.eml`-filer i `web/app_files/MailPickup/` i stedet for at blive sendt. Push kræver et lokalt nøglepar: `dotnet run --project web -- --generate-vapid-keys`, og sæt `Push:PublicKey`, `Push:PrivateKey` og `Push:Subject`. **Indbakke** kræver en rigtig postkasse i `Mail:Imap:*`.
 2. Start systemet:
    ```bash
    dotnet run --project web
@@ -394,10 +386,12 @@ docker compose start web
 | Symptom | Årsag | Løsning |
 |---|---|---|
 | Ingen kan logge ind efter første opstart | `Users__InitialAdmin__*` var ikke sat, da databasen blev oprettet | Sæt begge værdier. Er der endnu ingen data, så stop systemet, slet volumen `<projekt>_web_app_dbs`, og start igen. |
-| Login-siden genindlæses bare, når man logger ind | Systemet ser http, fordi det ikke stoler på proxyen, eller proxyen sender ikke `X-Forwarded-Proto` | Sæt `ForwardedHeaders__KnownNetworks` eller `KnownProxies`, tjek proxyens headers, og kør `docker compose up -d`. |
-| **For mange forsøg** for mange brugere på én gang | Systemet ser proxyens IP i stedet for brugernes | Samme løsning: stol på proxyen, og send `X-Forwarded-For`. |
-| Systemet starter ikke: "ForwardedHeaders:KnownNetworks indeholder …" | Ugyldig værdi | Brug IP-adresser i `KnownProxies` og netværk med `/` i `KnownNetworks`, fx `172.16.0.0/12`. |
-| "Der kan ikke sendes e-mails" ved **Opret bruger** | `Mail__FromAddress`, `Mail__Smtp__Host` eller `App__BaseUrl` mangler | Udfyld dem, og kør `docker compose up -d`. Indtil da kan brugere oprettes med en adgangskode. |
+| **400 Bad Request** | Systemet er åbnet på en anden adresse end `App__Domain`, fx serverens IP-adresse | Brug domænet. Tjek, at `App__Domain` er stavet rigtigt, og at proxyen sender den oprindelige `Host` videre. |
+| "Der opstod en fejl", når login-siden åbnes | Siden er åbnet direkte over http (fx `http://<server>:8080`) uden om proxyen, eller proxyen sender ikke `X-Forwarded-Proto` | Åbn systemet via `https://` og domænet. Tjek proxyens headers. |
+| Login virker ikke eller **For mange forsøg** for mange brugere på én gang bag en proxy på en anden maskine | Proxyen har en offentlig IP-adresse og er derfor ikke betroet | Sæt `ForwardedHeaders__KnownProxies` til proxyens adresse (afsnit 4), og kør `docker compose up -d`. |
+| Systemet starter ikke: "App:Domain indeholder …" | Der står mere end domænet, fx en sti | Skriv kun domænet, fx `vagter.skolen.dk`. |
+| Systemet starter ikke: "ForwardedHeaders:KnownNetworks indeholder …" | Ugyldig værdi | Brug IP-adresser i `KnownProxies` og netværk med `/` i `KnownNetworks`, fx `203.0.113.0/24`. |
+| "Der kan ikke sendes e-mails" ved **Opret bruger** | `Mail__FromAddress`, `Mail__Smtp__Host` eller `App__Domain` mangler | Udfyld dem, og kør `docker compose up -d`. Indtil da kan brugere oprettes med en adgangskode. |
 | Loggen siger "SMTP-serveren … afviste login" | Forkert `Mail__Smtp__UserName` eller `Password` | Ret værdierne. Hos Gmail og lignende skal der bruges en app-adgangskode. |
 | Loggen siger "Kunne ikke forbinde til SMTP-serveren" | Forkert host, port eller sikkerhed, eller en firewall blokerer | Brug `587` med `StartTls` eller `465` med `SslOnConnect`. |
 | Mails kommer ikke frem, men der er ingen fejl | `Mail__PickupDirectory` er sat | Tøm værdien i drift. |

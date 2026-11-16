@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -162,8 +163,17 @@ builder.Services.AddDataProtection()
     .SetApplicationName("Vagttilmelding")
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "app_dbs", "keys")));
 
-// Bag en reverse proxy (step 16): X-Forwarded-For/-Proto kun fra kendte proxies (ForwardedHeaders:KnownProxies/KnownNetworks).
+// Bag en reverse proxy (step 16 og 19): X-Forwarded-For/-Proto fra samme maskine, private netværk og evt. ForwardedHeaders:*.
 builder.Services.Configure<ForwardedHeadersOptions>(options => ForwardedHeadersConfiguration.Apply(options, builder.Configuration));
+
+// App:Domain (step 19): links i mails (AppLinks) og de værter, systemet svarer på. En ugyldig værdi stopper opstarten her.
+// Er AllowedHosts sat til andet end *, vinder den. localhost er med, så systemet kan tjekkes fra selve serveren.
+var appDomain = AppLinks.ParseDomain(builder.Configuration[AppLinks.DomainKey]);
+var allowedHosts = builder.Configuration["AllowedHosts"]?.Trim();
+if (appDomain is not null && (string.IsNullOrEmpty(allowedHosts) || allowedHosts == "*"))
+{
+    builder.Services.PostConfigure<HostFilteringOptions>(options => options.AllowedHosts = [AppLinks.HostOf(appDomain), "localhost"]);
+}
 
 // Authentication (authentication.md): cookie-login
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -277,7 +287,7 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
     SuppressDiagnosticsCallback = _ => true
 });
 
-// Bag en reverse proxy: klientens IP og https fra X-Forwarded-* (kun kendte proxies). Før alt, der bruger scheme eller IP.
+// Bag en reverse proxy: klientens IP og https fra X-Forwarded-* (kun betroede afsendere). Før alt, der bruger scheme eller IP.
 app.UseForwardedHeaders();
 
 // Tomme 4xx/5xx-svar viser statussiden
